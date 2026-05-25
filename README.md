@@ -42,6 +42,10 @@ npm start
 
 Open **http://localhost:3789/TacticalCraft_v3.html**
 
+### Play online (hosted)
+
+**https://tacticalcraft.onrender.com**
+
 The server also exposes a static file server on the same port, so the game and server run together.
 
 ### Dev mode (auto-restart on file change)

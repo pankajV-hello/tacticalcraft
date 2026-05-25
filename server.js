@@ -22,6 +22,9 @@ app.use((_req, res, next) => {
 // ── STATIC FILES ────────────────────────────────────────────────────────────
 app.use(express.static(__dirname));
 
+// ── ROOT REDIRECT ────────────────────────────────────────────────────────────
+app.get('/', (_req, res) => res.redirect('/TacticalCraft_v3.html'));
+
 // ── GAME STATE ───────────────────────────────────────────────────────────────
 const players     = {};        // socketId -> PlayerState
 const blockDeltas = [];        // world mutation log for sync on join
