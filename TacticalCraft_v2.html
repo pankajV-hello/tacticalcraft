@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TacticalCraft — Build. Fortify. Destroy.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple:    #3C3489;
+  --purple-lt: #5A50C0;
+  --teal:      #0F6E56;
+  --teal-lt:   #00C97A;
+  --amber:     #E8890A;
+  --midnight:  #1A1A2E;
+  --bone:      #F5F4EF;
+  --red:       #c04020;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--midnight); overflow:hidden; font-family:'Inter',sans-serif; color:var(--bone); }
+canvas { display:block; }
+
+/* ── START SCREEN ─────────────────────────────────────────────────────── */
+#start {
+  position:fixed; inset:0;
+  background:var(--midnight);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  z-index:100; overflow:hidden;
+}
+#ptx { position:absolute; inset:0; z-index:0; }
+
+.sc { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; width:100%; max-width:860px; padding:0 24px; }
+
+/* Logo */
+.logo-wrap { display:flex; align-items:center; gap:18px; margin-bottom:10px; filter:drop-shadow(0 0 32px rgba(60,52,137,.7)); animation:logopulse 3s ease-in-out infinite; }
+@keyframes logopulse {
+  0%,100% { filter:drop-shadow(0 0 24px rgba(60,52,137,.6)); }
+  50%      { filter:drop-shadow(0 0 52px rgba(60,52,137,1)) drop-shadow(0 0 80px rgba(15,110,86,.35)); }
+}
+.wm {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:900; font-size:68px;
+  letter-spacing:.13em; line-height:1;
+  color:var(--bone);
+}
+.wm em { color:var(--teal-lt); font-style:normal; }
+
+.tagline {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:13px;
+  letter-spacing:.45em; color:#4a4a6a;
+  text-transform:uppercase; margin-bottom:40px;
+}
+
+/* Class grid */
+.cls-lbl {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:11px;
+  letter-spacing:.3em; color:#3a3a5a;
+  text-transform:uppercase; margin-bottom:12px;
+  align-self:flex-start;
+}
+#cls-grid {
+  display:grid; grid-template-columns:repeat(6,1fr);
+  gap:8px; width:100%; margin-bottom:32px;
+}
+.cc {
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:6px; padding:14px 6px 10px;
+  text-align:center; cursor:pointer;
+  transition:all .15s; position:relative; overflow:hidden;
+}
+.cc:hover { border-color:rgba(255,255,255,.18); transform:translateY(-2px); }
+.cc.sel { border-color:var(--teal-lt); background:rgba(0,201,122,.07); box-shadow:0 0 16px rgba(0,201,122,.12); }
+.cc-glow { position:absolute; inset:0; opacity:0; transition:opacity .15s; }
+.cc.sel .cc-glow { opacity:1; }
+.cc-ico { font-size:22px; margin-bottom:6px; display:block; }
+.cc-name {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:13px; letter-spacing:.08em;
+  color:var(--bone); display:block; margin-bottom:3px;
+}
+.cc-hp { font-family:'JetBrains Mono',monospace; font-size:9px; color:#4a4a6a; margin-bottom:4px; display:block; }
+.cc-desc { font-size:9px; color:#3a3a5a; line-height:1.4; }
+
+/* Enter button */
+#enter-btn {
+  padding:15px 72px;
+  background:var(--purple);
+  border:1px solid var(--purple-lt);
+  border-radius:4px;
+  color:var(--bone);
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:900; font-size:15px;
+  letter-spacing:.22em; text-transform:uppercase;
+  cursor:pointer; transition:all .2s;
+  margin-bottom:32px; position:relative; overflow:hidden;
+}
+#enter-btn::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transform:translateX(-100%); transition:transform .5s;
+}
+#enter-btn:hover { background:var(--purple-lt); box-shadow:0 0 32px rgba(90,80,192,.4); }
+#enter-btn:hover::after { transform:translateX(100%); }
+
+/* Controls */
+.ctrl-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:5px 28px; font-size:11px; color:#333360;
+}
+.ctrl-grid b { color:#4a4a70; }
+
+/* ── HUD ──────────────────────────────────────────────────────────────── */
+#hud { position:fixed; inset:0; pointer-events:none; z-index:10; }
+
+/* Crosshair */
+#xhair { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:28px; height:28px; }
+
+/* Top bar */
+#tbar {
+  position:absolute; top:0; left:0; right:0;
+  padding:10px 20px;
+  display:flex; justify-content:space-between; align-items:center;
+  background:linear-gradient(180deg,rgba(26,26,46,.85) 0%,transparent 100%);
+}
+.hlogo { display:flex; align-items:center; gap:10px; }
+.hwm {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:900; font-size:17px; letter-spacing:.12em;
+  color:rgba(245,244,239,.55);
+}
+.hwm em { color:var(--teal-lt); font-style:normal; }
+.hstats { display:flex; gap:20px; }
+.hs { text-align:center; }
+.hs-v { font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--bone); font-weight:600; }
+.hs-l { font-size:8px; color:#404060; letter-spacing:.1em; text-transform:uppercase; }
+
+/* Badges */
+#cbadge {
+  position:absolute; top:54px; left:20px;
+  display:flex; align-items:center; gap:8px;
+  background:rgba(26,26,46,.75);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:4px; padding:5px 12px;
+}
+.cb-ico { font-size:15px; }
+.cb-name {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:13px; letter-spacing:.1em;
+}
+.cb-bar { width:3px; height:32px; border-radius:2px; margin-left:4px; }
+
+#mbadge {
+  position:absolute; top:54px; right:20px;
+  padding:5px 16px; border-radius:20px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+}
+.mb-build { background:rgba(60,52,137,.2); border:1px solid var(--purple-lt); color:var(--purple-lt); }
+.mb-combat { background:rgba(192,64,32,.15); border:1px solid var(--red); color:var(--red); }
+
+/* Notification */
+#notif {
+  position:absolute; top:96px; left:50%; transform:translateX(-50%);
+  background:rgba(26,26,46,.9);
+  border:1px solid rgba(0,201,122,.3);
+  border-radius:4px; padding:7px 24px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:13px; letter-spacing:.1em;
+  color:var(--teal-lt); opacity:0; transition:opacity .25s;
+  white-space:nowrap;
+}
+
+/* Status bars */
+#sbars { position:absolute; bottom:96px; left:20px; width:175px; }
+.brow { margin-bottom:8px; }
+.bl {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:9px; letter-spacing:.15em; color:#404060;
+  text-transform:uppercase;
+  display:flex; justify-content:space-between; margin-bottom:3px;
+}
+.bv { font-family:'JetBrains Mono',monospace; font-size:9px; color:#5a5a80; }
+.bbg { height:5px; background:rgba(255,255,255,.07); border-radius:2px; }
+.bf { height:100%; border-radius:2px; transition:width .35s; }
+#hfill { background:var(--teal-lt); width:100%; }
+#afill { background:var(--purple-lt); width:75%; }
+
+/* Toolbar */
+#toolbar {
+  position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+  display:flex; gap:4px;
+  background:rgba(26,26,46,.8);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:6px; padding:5px;
+}
+.slot {
+  width:46px; height:46px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:4px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:3px; cursor:pointer;
+  background:rgba(0,0,0,.35);
+  transition:all .12s;
+}
+.slot.act { border-color:var(--teal-lt); background:rgba(0,201,122,.1); box-shadow:0 0 10px rgba(0,201,122,.18); }
+.sc2 { width:24px; height:24px; border-radius:3px; }
+.sk { font-family:'JetBrains Mono',monospace; font-size:8px; color:#404060; }
+
+/* Info panel */
+#info {
+  position:absolute; bottom:96px; right:20px;
+  background:rgba(26,26,46,.75);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:6px; padding:11px 15px;
+  font-size:10px; color:#404060; line-height:2; min-width:148px;
+}
+#info b { color:#666680; }
+#bname {
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700; font-size:14px; letter-spacing:.06em;
+  color:var(--teal-lt); margin-top:4px;
+}
+
+/* Minimap */
+#mmap {
+  position:absolute; top:16px; right:20px;
+  width:104px; height:104px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:4px; overflow:hidden;
+  background:#08080f;
+}
+#mmap canvas { width:100%; height:100%; }
+.mmap-lbl {
+  position:absolute; bottom:2px; left:0; right:0;
+  text-align:center;
+  font-family:'JetBrains Mono',monospace; font-size:7px;
+  color:#2a2a40; pointer-events:none;
+}
+
+/* Block target */
+#btgt {
+  position:absolute; bottom:78px; left:50%; transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace; font-size:9px; color:#2a2a50;
+  text-align:center; letter-spacing:.05em;
+}
+
+/* Vignette */
+#vig {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(10,8,22,.65) 100%);
+  pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<!-- ── START SCREEN ───────────────────────────────────────────────────── -->
+<div id="start">
+  <canvas id="ptx"></canvas>
+  <div class="sc">
+
+    <div class="logo-wrap">
+      <!-- SVG Logo Mark: isometric voxel cube with crosshair on top face -->
+      <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tf" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#5A50C0"/>
+            <stop offset="100%" stop-color="#3C3489"/>
+          </linearGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Left face -->
+        <polygon points="10,22 32,35 32,58 10,45" fill="#1A1A2E" stroke="#2A2460" stroke-width="0.5"/>
+        <!-- Right face -->
+        <polygon points="54,22 32,35 32,58 54,45" fill="#2A2460" stroke="#2A2460" stroke-width="0.5"/>
+        <!-- Top face -->
+        <polygon points="32,8 54,22 32,35 10,22" fill="url(#tf)" stroke="#5A50C0" stroke-width="0.5"/>
+        <!-- Top edge highlights -->
+        <line x1="32" y1="8" x2="54" y2="22" stroke="#7A70E0" stroke-width="1" opacity="0.6"/>
+        <line x1="32" y1="8" x2="10" y2="22" stroke="#5A50C0" stroke-width="0.8" opacity="0.4"/>
+        <!-- Crosshair on top face (isometric axes: vertical=top to bottom vertex, horizontal=left to right vertex) -->
+        <g filter="url(#glow)">
+          <line x1="32" y1="12" x2="32" y2="31" stroke="#0F6E56" stroke-width="2"/>
+          <line x1="14" y1="22" x2="50" y2="22" stroke="#0F6E56" stroke-width="2"/>
+          <circle cx="32" cy="22" r="3.5" fill="none" stroke="#00C97A" stroke-width="1.5"/>
+          <circle cx="32" cy="22" r="1.5" fill="#00C97A"/>
+        </g>
+        <!-- Vertical edge lines -->
+        <line x1="10" y1="22" x2="10" y2="45" stroke="#2A2460" stroke-width="0.8" opacity="0.6"/>
+        <line x1="54" y1="22" x2="54" y2="45" stroke="#2A2460" stroke-width="0.8" opacity="0.6"/>
+        <line x1="32" y1="35" x2="32" y2="58" stroke="#1E1E3C" stroke-width="0.8" opacity="0.8"/>
+      </svg>
+      <div class="wm">TACTICAL<em>CRAFT</em></div>
+    </div>
+
+    <div class="tagline">Build &nbsp;·&nbsp; Fortify &nbsp;·&nbsp; Destroy</div>
+
+    <div class="cls-lbl">Choose your class</div>
+    <div id="cls-grid">
+      <div class="cc sel" data-cls="0">
+        <div class="cc-glow" style="background:radial-gradient(ellipse at 50% 0%, rgba(15,110,86,.25) 0%, transparent 70%)"></div>
+        <span class="cc-ico">⚒</span>
+        <span class="cc-name">Builder</span>
+        <span class="cc-hp">100 HP</span>
+        <span class="cc-desc">2× build speed</span>
+      </div>
+      <div class="cc" data-cls="1">
+        <div class="cc-glow" style="background:radial-gradient(ellipse at 50% 0%, rgba(60,52,137,.3) 0%, transparent 70%)"></div>
+        <span class="cc-ico">⚔</span>
+        <span class="cc-name">Soldier</span>
+        <span class="cc-hp">125 HP</span>
+        <span class="cc-desc">+25 HP · sprint boost</span>
+      </div>
+      <div class="cc" data-cls="2">
+        <div class="cc-glow" style="background:radial-gradient(ellipse at 50% 0%, rgba(232,137,10,.2) 0%, transparent 70%)"></div>
+        <span class="cc-ico">⚙</span>
+        <span class="cc-name">Engineer</span>
+        <span class="cc-hp">100 HP</span>
+        <span class="cc-desc">Block repair mode</span>
+      </div>
+      <div class="cc" data-cls="3">
+        <div class="cc-glow" style="background:radial-gradient(ellipse at 50% 0%, rgba(0,168,122,.2) 0%, transparent 70%)"></div>
+        <span class="cc-ico">✚</span>
+        <span class="cc-name">Medic</span>
+        <span class="cc-hp">100 HP</span>
+        <span class="cc-desc">Passive HP regen</span>
+      </div>
+      <div class="cc" data-cls="4">
+        <div class="cc-glow" style="background:radial-gradient(ellipse at 50% 0%, rgba(96,112,128,.25) 0%, transparent 70%)"></div>
+        <span class="cc-ico">⊕</span>
+        <span class="cc-name">Sniper</span>
+        <span class="cc-hp">80 HP</span>
+        <span class="cc-desc">+6 reach range</span>
+      </div>
+      <div class="cc" data-cls="5">
+        <div class="cc-glow" style="background:radial-gradient(ellipse at 50% 0%, rgba(192,64,32,.25) 0%, transparent 70%)"></div>
+        <span class="cc-ico">💥</span>
+        <span class="cc-name">Demolisher</span>
+        <span class="cc-hp">100 HP</span>
+        <span class="cc-desc">3×3 area break</span>
+      </div>
+    </div>
+
+    <button id="enter-btn">ENTER WORLD</button>
+
+    <div class="ctrl-grid">
+      <div><b>WASD</b> Move</div>
+      <div><b>Mouse</b> Look</div>
+      <div><b>Space</b> Jump</div>
+      <div><b>Shift</b> Sprint</div>
+      <div><b>L-Click</b> Break</div>
+      <div><b>R-Click</b> Place</div>
+      <div><b>F</b> Build/Combat</div>
+      <div><b>1–8 / Scroll</b> Block</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HUD ────────────────────────────────────────────────────────────── -->
+<div id="hud">
+  <div id="vig"></div>
+
+  <!-- Crosshair -->
+  <div id="xhair">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="14" y1="2" x2="14" y2="9"  stroke="#00C97A" stroke-width="1.5"/>
+      <line x1="14" y1="19" x2="14" y2="26" stroke="#00C97A" stroke-width="1.5"/>
+      <line x1="2"  y1="14" x2="9"  y2="14" stroke="#00C97A" stroke-width="1.5"/>
+      <line x1="19" y1="14" x2="26" y2="14" stroke="#00C97A" stroke-width="1.5"/>
+      <circle cx="14" cy="14" r="3" stroke="#00C97A" stroke-width="1" fill="none" opacity="0.7"/>
+    </svg>
+  </div>
+
+  <!-- Top bar -->
+  <div id="tbar">
+    <div class="hlogo">
+      <svg width="24" height="24" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tf2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#5A50C0"/><stop offset="100%" stop-color="#3C3489"/>
+          </linearGradient>
+        </defs>
+        <polygon points="10,22 32,35 32,58 10,45" fill="#1A1A2E"/>
+        <polygon points="54,22 32,35 32,58 54,45" fill="#2A2460"/>
+        <polygon points="32,8 54,22 32,35 10,22" fill="url(#tf2)"/>
+        <line x1="32" y1="12" x2="32" y2="31" stroke="#0F6E56" stroke-width="3"/>
+        <line x1="14" y1="22" x2="50" y2="22" stroke="#0F6E56" stroke-width="3"/>
+        <circle cx="32" cy="22" r="4" fill="#00C97A"/>
+      </svg>
+      <div class="hwm">TACTICAL<em>CRAFT</em> <span style="font-size:10px;color:#2a2a40;font-weight:400">proto v2</span></div>
+    </div>
+    <div class="hstats">
+      <div class="hs"><div class="hs-v" id="s-placed">0</div><div class="hs-l">Placed</div></div>
+      <div class="hs"><div class="hs-v" id="s-broken">0</div><div class="hs-l">Broken</div></div>
+      <div class="hs"><div class="hs-v" id="s-pos" style="font-size:11px">0, 0, 0</div><div class="hs-l">Position</div></div>
+    </div>
+  </div>
+
+  <!-- Class badge -->
+  <div id="cbadge">
+    <span class="cb-ico" id="cb-ico">⚒</span>
+    <span class="cb-name" id="cb-name">Builder</span>
+    <div class="cb-bar" id="cb-bar" style="background:#00C97A"></div>
+  </div>
+
+  <!-- Mode badge -->
+  <div id="mbadge" class="mb-combat">⚔ COMBAT</div>
+
+  <!-- Minimap -->
+  <div id="mmap">
+    <canvas id="mmcv" width="104" height="104"></canvas>
+    <div class="mmap-lbl">MINIMAP</div>
+  </div>
+
+  <!-- Notification -->
+  <div id="notif"></div>
+
+  <!-- Status bars -->
+  <div id="sbars">
+    <div class="brow">
+      <div class="bl"><span>HEALTH</span><span class="bv" id="hval">100</span></div>
+      <div class="bbg"><div class="bf" id="hfill"></div></div>
+    </div>
+    <div class="brow">
+      <div class="bl"><span>ARMOR</span><span class="bv" id="aval">75</span></div>
+      <div class="bbg"><div class="bf" id="afill"></div></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <div class="slot act" data-b="0"><div class="sc2" style="background:#5a9e4a"></div><div class="sk">1</div></div>
+    <div class="slot"     data-b="1"><div class="sc2" style="background:#8b6540"></div><div class="sk">2</div></div>
+    <div class="slot"     data-b="2"><div class="sc2" style="background:#7a7a7a"></div><div class="sk">3</div></div>
+    <div class="slot"     data-b="3"><div class="sc2" style="background:#d4b870"></div><div class="sk">4</div></div>
+    <div class="slot"     data-b="4"><div class="sc2" style="background:#8b6530"></div><div class="sk">5</div></div>
+    <div class="slot"     data-b="5"><div class="sc2" style="background:#607080"></div><div class="sk">6</div></div>
+    <div class="slot"     data-b="6"><div class="sc2" style="background:#c8a870"></div><div class="sk">7</div></div>
+    <div class="slot"     data-b="7"><div class="sc2" style="background:#a05040"></div><div class="sk">8</div></div>
+  </div>
+
+  <!-- Info panel -->
+  <div id="info">
+    <div><b>F</b> toggle mode</div>
+    <div><b>R-click</b> place block</div>
+    <div><b>L-click</b> break block</div>
+    <div id="bname" style="color:#00C97A;margin-top:6px">Grass</div>
+  </div>
+
+  <!-- Block target -->
+  <div id="btgt"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ── CLASSES ────────────────────────────────────────────────────────────────
+const CLS_DATA = [
+  { name:'Builder',    ico:'⚒',  color:'#00C97A', hp:100, reach:8,  sprint:9  },
+  { name:'Soldier',    ico:'⚔',  color:'#5A50C0', hp:125, reach:8,  sprint:11 },
+  { name:'Engineer',   ico:'⚙',  color:'#E8890A', hp:100, reach:8,  sprint:9  },
+  { name:'Medic',      ico:'✚',  color:'#00a87a', hp:100, reach:8,  sprint:9  },
+  { name:'Sniper',     ico:'⊕',  color:'#607080', hp:80,  reach:14, sprint:9  },
+  { name:'Demolisher', ico:'💥', color:'#c04020', hp:100, reach:8,  sprint:9  },
+];
+let selectedCls = 0;
+
+// Class card selection
+document.querySelectorAll('.cc').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.cc').forEach(c => c.classList.remove('sel'));
+    el.classList.add('sel');
+    selectedCls = +el.dataset.cls;
+  });
+});
+
+// ── PARTICLE CANVAS (start screen bg) ─────────────────────────────────────
+(function() {
+  const cv = document.getElementById('ptx');
+  const ctx = cv.getContext('2d');
+  let W, H;
+  const cubes = [];
+
+  function resize() {
+    W = cv.width = window.innerWidth;
+    H = cv.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 38; i++) {
+    cubes.push({
+      x: Math.random() * 1400 - 200,
+      y: Math.random() * 900 - 100,
+      s: Math.random() * 14 + 4,
+      vx: (Math.random() - .5) * .18,
+      vy: (Math.random() - .5) * .12,
+      a: Math.random() * Math.PI * 2,
+      va: (Math.random() - .5) * .008,
+      op: Math.random() * .12 + .02,
+    });
+  }
+
+  function drawIso(ctx, x, y, s, op) {
+    ctx.globalAlpha = op;
+    const h = s * .55;
+    ctx.fillStyle = '#3C3489';
+    ctx.beginPath();
+    ctx.moveTo(x, y - h);
+    ctx.lineTo(x + s, y - h * .3);
+    ctx.lineTo(x, y + h * .4);
+    ctx.lineTo(x - s, y - h * .3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#1A1A2E';
+    ctx.beginPath();
+    ctx.moveTo(x - s, y - h * .3);
+    ctx.lineTo(x, y + h * .4);
+    ctx.lineTo(x, y + h * 1.1);
+    ctx.lineTo(x - s, y + h * .4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#2A2460';
+    ctx.beginPath();
+    ctx.moveTo(x + s, y - h * .3);
+    ctx.lineTo(x, y + h * .4);
+    ctx.lineTo(x, y + h * 1.1);
+    ctx.lineTo(x + s, y + h * .4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+    cubes.forEach(c => {
+      c.x += c.vx; c.y += c.vy; c.a += c.va;
+      if (c.x < -300) c.x = W + 100;
+      if (c.x > W + 300) c.x = -100;
+      if (c.y < -200) c.y = H + 100;
+      if (c.y > H + 200) c.y = -100;
+      drawIso(ctx, c.x, c.y, c.s, c.op);
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const WORLD_R = 28;
+const WORLD_H = 48;
+const SEA_Y   = 14;
+
+// Block types (id 1-8, plus 9=leaves)
+const BLOCKS = [
+  null, // id 0 = air
+  { name:'Grass',   color:0x5a9e4a },
+  { name:'Dirt',    color:0x8b6540 },
+  { name:'Stone',   color:0x7a7a7a },
+  { name:'Sand',    color:0xd4b870 },
+  { name:'Wood',    color:0x8b6530 },
+  { name:'Metal',   color:0x607080 },
+  { name:'Sandbag', color:0xc8a870 },
+  { name:'Brick',   color:0xa05040 },
+  { name:'Leaves',  color:0x3a7a30 },
+];
+
+let selBlock = 0; // 0-7 index into toolbar
+let buildMode = false;
+let placed = 0, broken = 0;
+
+// Player state
+let player = {
+  pos: new THREE.Vector3(0, SEA_Y + 3, 0),
+  vel: new THREE.Vector3(),
+  onGround: false,
+  yaw: 0, pitch: 0,
+  hp: 100, maxHp: 100,
+  reach: 8,
+};
+
+// ── THREE.JS SETUP ─────────────────────────────────────────────────────────
+const scene    = new THREE.Scene();
+const camera   = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 220);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Fog
+scene.fog = new THREE.Fog(0x6b80a0, 40, 140);
+
+// Sky sphere
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  vertexShader: `
+    varying vec3 vWP;
+    void main() { vWP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+  `,
+  fragmentShader: `
+    varying vec3 vWP;
+    void main() {
+      float h = normalize(vWP).y;
+      vec3 top     = vec3(0.10, 0.08, 0.22);
+      vec3 mid     = vec3(0.22, 0.26, 0.38);
+      vec3 horizon = vec3(0.42, 0.50, 0.58);
+      vec3 col = h > 0.0
+        ? mix(mid, top, clamp(h * 2.0, 0.0, 1.0))
+        : mix(horizon, mid, clamp(-h * 5.0 + 1.0, 0.0, 1.0));
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+});
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(180, 10, 10), skyMat));
+
+// Sun + ambient
+const sun = new THREE.DirectionalLight(0xfff0d0, 1.2);
+sun.position.set(50, 80, 30);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 220;
+sun.shadow.camera.left = sun.shadow.camera.bottom = -80;
+sun.shadow.camera.right = sun.shadow.camera.top = 80;
+scene.add(sun);
+scene.add(new THREE.AmbientLight(0x5060a0, 0.7));
+
+// ── WORLD DATA ─────────────────────────────────────────────────────────────
+const worldData = {}; // "x,y,z" -> blockId
+const blockMeshes = {};
+const matCache = {};
+
+function bKey(x, y, z) { return `${x},${y},${z}`; }
+
+function getMat(color) {
+  if (!matCache[color]) matCache[color] = new THREE.MeshLambertMaterial({ color });
+  return matCache[color];
+}
+
+// FBM terrain noise
+function hash(x, z) { return Math.abs(Math.sin(x * 127.1 + z * 311.7) * 43758.5453) % 1; }
+function smoothN(x, z) {
+  const ix = Math.floor(x), iz = Math.floor(z);
+  const fx = x - ix, fz = z - iz;
+  const u = fx*fx*(3 - 2*fx), v = fz*fz*(3 - 2*fz);
+  const a = hash(ix, iz), b = hash(ix+1, iz), c = hash(ix, iz+1), d = hash(ix+1, iz+1);
+  return a + (b-a)*u + (c-a)*v + (d-a)*u*v;
+}
+function fbm(x, z) {
+  return smoothN(x*.06, z*.06)*10 + smoothN(x*.13, z*.13)*4 + smoothN(x*.28, z*.28)*2;
+}
+function terrainH(x, z) { return Math.round(10 + fbm(x, z)); }
+
+function setBlock(x, y, z, id) {
+  worldData[bKey(x,y,z)] = id;
+}
+function getBlock(x, y, z) {
+  return worldData[bKey(x,y,z)] || 0;
+}
+
+function generateWorld() {
+  // Terrain
+  for (let x = -WORLD_R; x < WORLD_R; x++) {
+    for (let z = -WORLD_R; z < WORLD_R; z++) {
+      const h = terrainH(x, z);
+      for (let y = 0; y <= h; y++) {
+        let id;
+        if (y === 0)        id = 3; // bedrock (stone)
+        else if (y === h)   id = 1; // grass
+        else if (y > h - 4) id = 2; // dirt
+        else                id = 3; // stone
+        setBlock(x, y, z, id);
+      }
+      // Sandy beach near sea
+      if (h >= SEA_Y - 2 && h <= SEA_Y + 1) {
+        setBlock(x, h, z, 4); // sand
+      }
+    }
+  }
+
+  // Trees
+  const treeSeeds = [
+    [8,12],[-8,15],[15,-5],[-14,-10],[5,-18],[-18,6],[11,-12],[-6,8],
+    [18,10],[-15,14],[3,16],[-10,-17],[20,-8],[-20,-5],[7,20]
+  ];
+  treeSeeds.forEach(([tx, tz]) => {
+    const ty = terrainH(tx, tz);
+    if (ty < SEA_Y) return;
+    setBlock(tx, ty,   tz, 1);
+    setBlock(tx, ty+1, tz, 5);
+    setBlock(tx, ty+2, tz, 5);
+    setBlock(tx, ty+3, tz, 5);
+    for (let dy = 4; dy <= 5; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          if (!getBlock(tx+dx, ty+dy, tz+dz)) setBlock(tx+dx, ty+dy, tz+dz, 9);
+        }
+      }
+    }
+  });
+
+  // Watchtower 1 at (−12, ?, 10)
+  buildTower(-12, 10);
+  // Watchtower 2 at (14, ?, -14)
+  buildTower(14, -14);
+}
+
+function buildTower(tx, tz) {
+  const base = terrainH(tx, tz) + 1;
+  // 4 metal corner pillars, 6 tall
+  const corners = [[0,0],[2,0],[0,2],[2,2]];
+  corners.forEach(([dx, dz]) => {
+    for (let h = 0; h < 6; h++) setBlock(tx+dx, base+h, tz+dz, 6); // metal
+  });
+  // Wooden platform on top
+  for (let dx = 0; dx <= 2; dx++) {
+    for (let dz = 0; dz <= 2; dz++) {
+      setBlock(tx+dx, base+6, tz+dz, 5); // wood
+    }
+  }
+  // Sandbag walls around platform edge
+  for (let dx = 0; dx <= 2; dx++) {
+    setBlock(tx+dx, base+7, tz,   7);
+    setBlock(tx+dx, base+7, tz+2, 7);
+  }
+  setBlock(tx,   base+7, tz+1, 7);
+  setBlock(tx+2, base+7, tz+1, 7);
+}
+
+// ── MESH BUILDING ──────────────────────────────────────────────────────────
+function addMesh(x, y, z, id) {
+  const key = bKey(x,y,z);
+  if (blockMeshes[key]) return;
+  const bd = BLOCKS[Math.min(id, BLOCKS.length-1)];
+  if (!bd) return;
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(1,1,1),
+    getMat(bd.color)
+  );
+  mesh.position.set(x+.5, y+.5, z+.5);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData = {x, y, z, id};
+  scene.add(mesh);
+  blockMeshes[key] = mesh;
+}
+
+function removeMesh(x, y, z) {
+  const key = bKey(x,y,z);
+  if (blockMeshes[key]) { scene.remove(blockMeshes[key]); delete blockMeshes[key]; }
+}
+
+function buildAllMeshes() {
+  Object.entries(worldData).forEach(([k, id]) => {
+    const [x, y, z] = k.split(',').map(Number);
+    addMesh(x, y, z, id);
+  });
+}
+
+// ── BLOCK HIGHLIGHT ────────────────────────────────────────────────────────
+const hlMesh = new THREE.Mesh(
+  new THREE.BoxGeometry(1.02, 1.02, 1.02),
+  new THREE.MeshBasicMaterial({ color:0x00C97A, wireframe:true, transparent:true, opacity:.6 })
+);
+hlMesh.visible = false;
+scene.add(hlMesh);
+
+// ── PARTICLES ──────────────────────────────────────────────────────────────
+const particles = [];
+
+function spawnParticles(x, y, z, color) {
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(.15,.15,.15),
+      new THREE.MeshLambertMaterial({ color, transparent:true, opacity:1 })
+    );
+    m.position.set(x+.5+(Math.random()-.5)*.4, y+.5, z+.5+(Math.random()-.5)*.4);
+    m.userData.v = new THREE.Vector3((Math.random()-.5)*4, Math.random()*4+1, (Math.random()-.5)*4);
+    m.userData.life = 0.6;
+    scene.add(m);
+    particles.push(m);
+  }
+}
+
+// ── INPUT ──────────────────────────────────────────────────────────────────
+const keys = {};
+let locked = false;
+
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'KeyF') toggleMode();
+  if (e.code === 'Digit1') pickSlot(0);
+  if (e.code === 'Digit2') pickSlot(1);
+  if (e.code === 'Digit3') pickSlot(2);
+  if (e.code === 'Digit4') pickSlot(3);
+  if (e.code === 'Digit5') pickSlot(4);
+  if (e.code === 'Digit6') pickSlot(5);
+  if (e.code === 'Digit7') pickSlot(6);
+  if (e.code === 'Digit8') pickSlot(7);
+  if (e.code === 'Escape') document.exitPointerLock && document.exitPointerLock();
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+document.addEventListener('pointerlockchange', () => { locked = !!document.pointerLockElement; });
+document.addEventListener('mousemove', e => {
+  if (!locked) return;
+  player.yaw   -= e.movementX * .002;
+  player.pitch  = Math.max(-1.4, Math.min(1.4, player.pitch - e.movementY * .002));
+});
+
+// Raycaster
+const rc = new THREE.Raycaster();
+
+document.addEventListener('mousedown', e => {
+  if (!locked) return;
+  const hit = doRaycast();
+  if (!hit) return;
+  if (e.button === 0) breakBlock(hit);
+  if (e.button === 2) {
+    const cls = CLS_DATA[selectedCls];
+    if (buildMode) placeBlock(hit);
+    else if (cls.name === 'Engineer') repairBlock(hit);
+  }
+});
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('wheel', e => {
+  let s = selBlock + (e.deltaY > 0 ? 1 : -1);
+  s = ((s % 8) + 8) % 8;
+  pickSlot(s);
+}, { passive:true });
+
+function doRaycast() {
+  rc.setFromCamera({x:0, y:0}, camera);
+  const reach = CLS_DATA[selectedCls].reach;
+  rc.far = reach;
+  const hits = rc.intersectObjects(Object.values(blockMeshes));
+  return hits.length > 0 ? hits[0] : null;
+}
+
+function breakBlock(hit) {
+  const {x, y, z} = hit.object.userData;
+  if (y === 0) return;
+  const id = getBlock(x, y, z);
+  const color = BLOCKS[Math.min(id, BLOCKS.length-1)]?.color || 0x888888;
+  spawnParticles(x, y, z, color);
+
+  const cls = CLS_DATA[selectedCls];
+  if (cls.name === 'Demolisher') {
+    // 3×3 area break
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        if (getBlock(x+dx, y, z+dz) && (y > 0)) {
+          delete worldData[bKey(x+dx, y, z+dz)];
+          removeMesh(x+dx, y, z+dz);
+        }
+      }
+    }
+    notify('💥 DEMOLISH — 3×3 CLEARED');
+  } else {
+    delete worldData[bKey(x, y, z)];
+    removeMesh(x, y, z);
+  }
+  broken++;
+  document.getElementById('s-broken').textContent = broken;
+  notify(`${BLOCKS[Math.min(id, BLOCKS.length-1)]?.name || '?'} broken`);
+}
+
+function placeBlock(hit) {
+  const n = hit.face.normal;
+  const {x, y, z} = hit.object.userData;
+  const nx = x + Math.round(n.x);
+  const ny = y + Math.round(n.y);
+  const nz = z + Math.round(n.z);
+  // Prevent placing inside player
+  const pp = player.pos;
+  if (Math.abs(nx - Math.floor(pp.x)) < 1 && ny >= Math.floor(pp.y) - 1 && ny <= Math.floor(pp.y) + 1 && Math.abs(nz - Math.floor(pp.z)) < 1) return;
+  const id = selBlock + 1;
+  setBlock(nx, ny, nz, id);
+  addMesh(nx, ny, nz, id);
+  placed++;
+  document.getElementById('s-placed').textContent = placed;
+  notify(`${BLOCKS[id]?.name} placed`);
+}
+
+function repairBlock(hit) {
+  const {x, y, z} = hit.object.userData;
+  notify('⚙ Block repaired');
+}
+
+// ── UI HELPERS ─────────────────────────────────────────────────────────────
+let notifT;
+function notify(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(notifT);
+  notifT = setTimeout(() => el.style.opacity = '0', 1800);
+}
+
+function pickSlot(i) {
+  selBlock = i;
+  document.querySelectorAll('.slot').forEach((el, idx) => el.classList.toggle('act', idx === i));
+  const id = i + 1;
+  document.getElementById('bname').textContent = BLOCKS[id]?.name || '?';
+}
+
+function toggleMode() {
+  buildMode = !buildMode;
+  const mb = document.getElementById('mbadge');
+  mb.className = 'mb-' + (buildMode ? 'build' : 'combat');
+  mb.textContent = buildMode ? '🔨 BUILD' : '⚔ COMBAT';
+  notify(buildMode ? 'Build mode — right click to place' : 'Combat mode');
+}
+
+function updateClassHUD() {
+  const cls = CLS_DATA[selectedCls];
+  document.getElementById('cb-ico').textContent  = cls.ico;
+  document.getElementById('cb-name').textContent = cls.name;
+  document.getElementById('cb-bar').style.background = cls.color;
+  player.hp    = cls.hp;
+  player.maxHp = cls.hp;
+  updateHealthBar();
+}
+
+function updateHealthBar() {
+  const pct = Math.round((player.hp / player.maxHp) * 100);
+  document.getElementById('hfill').style.width = pct + '%';
+  document.getElementById('hval').textContent  = Math.round(player.hp);
+}
+
+// ── PHYSICS ────────────────────────────────────────────────────────────────
+const GRAVITY = -20;
+
+function getGroundY(x, z) {
+  for (let y = WORLD_H; y >= 0; y--) {
+    if (getBlock(Math.floor(x), y, Math.floor(z))) return y + 1;
+  }
+  return 0;
+}
+
+function updatePlayer(dt) {
+  const cls = CLS_DATA[selectedCls];
+  const spd = keys['ShiftLeft'] ? cls.sprint : 5;
+
+  const dir = new THREE.Vector3(
+    (keys['KeyD']?1:0) - (keys['KeyA']?1:0),
+    0,
+    (keys['KeyS']?1:0) - (keys['KeyW']?1:0)
+  ).normalize().multiplyScalar(spd);
+
+  dir.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, player.yaw, 0)));
+  player.vel.x = dir.x;
+  player.vel.z = dir.z;
+
+  const gy = getGroundY(player.pos.x, player.pos.z);
+  player.onGround = player.pos.y <= gy + .1;
+  if (player.onGround) {
+    player.pos.y = gy;
+    player.vel.y = keys['Space'] ? 8 : 0;
+  } else {
+    player.vel.y += GRAVITY * dt;
+  }
+
+  player.pos.addScaledVector(player.vel, dt);
+  if (player.pos.y < -10) { player.pos.set(0, SEA_Y + 5, 0); player.vel.set(0,0,0); }
+
+  camera.position.copy(player.pos).add(new THREE.Vector3(0, 1.6, 0));
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+
+  const p = player.pos;
+  document.getElementById('s-pos').textContent =
+    `${Math.floor(p.x)}, ${Math.floor(p.y)}, ${Math.floor(p.z)}`;
+
+  // Medic regen
+  if (cls.name === 'Medic') {
+    player.hp = Math.min(player.maxHp, player.hp + dt * 0.5);
+    updateHealthBar();
+  }
+}
+
+// ── BLOCK HIGHLIGHT UPDATE ─────────────────────────────────────────────────
+function updateHighlight() {
+  const hit = doRaycast();
+  if (hit) {
+    const {x,y,z} = hit.object.userData;
+    hlMesh.position.set(x+.5, y+.5, z+.5);
+    hlMesh.visible = true;
+    const id = hit.object.userData.id;
+    document.getElementById('btgt').textContent =
+      `${BLOCKS[Math.min(id, BLOCKS.length-1)]?.name}  [${x}, ${y}, ${z}]`;
+  } else {
+    hlMesh.visible = false;
+    document.getElementById('btgt').textContent = '';
+  }
+}
+
+// ── MINIMAP ────────────────────────────────────────────────────────────────
+const mmCtx = document.getElementById('mmcv').getContext('2d');
+let mmTimer = 0;
+
+function drawMinimap() {
+  const size = 104;
+  const range = 36;
+  mmCtx.fillStyle = '#060610';
+  mmCtx.fillRect(0, 0, size, size);
+
+  const px = Math.floor(player.pos.x);
+  const pz = Math.floor(player.pos.z);
+
+  for (let dx = -range; dx < range; dx++) {
+    for (let dz = -range; dz < range; dz++) {
+      const wx = px + dx, wz = pz + dz;
+      for (let y = WORLD_H; y >= 0; y--) {
+        const id = getBlock(wx, y, wz);
+        if (id) {
+          const bd = BLOCKS[Math.min(id, BLOCKS.length-1)];
+          const cx = Math.floor((dx + range) / (range * 2) * size);
+          const cz = Math.floor((dz + range) / (range * 2) * size);
+          const c = bd.color;
+          const r = (c >> 16) & 0xff, g = (c >> 8) & 0xff, b = c & 0xff;
+          mmCtx.fillStyle = `rgb(${r},${g},${b})`;
+          mmCtx.fillRect(cx, cz, 1, 1);
+          break;
+        }
+      }
+    }
+  }
+
+  // Player dot
+  mmCtx.fillStyle = '#00C97A';
+  mmCtx.fillRect(size/2 - 2, size/2 - 2, 5, 5);
+
+  // Direction line
+  const dl = 10;
+  const ex = size/2 + Math.sin(player.yaw) * dl;
+  const ez = size/2 - Math.cos(player.yaw) * dl;
+  mmCtx.strokeStyle = 'rgba(255,255,255,0.7)';
+  mmCtx.lineWidth = 1;
+  mmCtx.beginPath();
+  mmCtx.moveTo(size/2, size/2);
+  mmCtx.lineTo(ex, ez);
+  mmCtx.stroke();
+}
+
+// ── GAME LOOP ──────────────────────────────────────────────────────────────
+let last = performance.now();
+
+function loop() {
+  requestAnimationFrame(loop);
+  const now = performance.now();
+  const dt  = Math.min((now - last) / 1000, .05);
+  last = now;
+
+  if (locked) {
+    updatePlayer(dt);
+    updateHighlight();
+  }
+
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.userData.v.y -= 20 * dt;
+    p.position.addScaledVector(p.userData.v, dt);
+    p.userData.life -= dt;
+    p.material.opacity = Math.max(0, p.userData.life / .6);
+    if (p.userData.life <= 0) {
+      scene.remove(p);
+      particles.splice(i, 1);
+    }
+  }
+
+  // Minimap update
+  mmTimer += dt;
+  if (mmTimer > 1.5) { drawMinimap(); mmTimer = 0; }
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+document.getElementById('enter-btn').addEventListener('click', () => {
+  updateClassHUD();
+  document.getElementById('start').style.display = 'none';
+  renderer.domElement.requestPointerLock();
+  drawMinimap();
+  pickSlot(0);
+  notify(`Class: ${CLS_DATA[selectedCls].name} — ${CLS_DATA[selectedCls].name === 'Builder' ? '2× build speed' : CLS_DATA[selectedCls].name === 'Soldier' ? '+25 HP, sprint boost' : CLS_DATA[selectedCls].name === 'Sniper' ? '+6 reach range' : CLS_DATA[selectedCls].name === 'Demolisher' ? '3×3 area break' : CLS_DATA[selectedCls].name === 'Medic' ? 'Passive HP regen' : 'Block repair mode'}`);
+});
+
+renderer.domElement.addEventListener('click', () => {
+  if (!locked) renderer.domElement.requestPointerLock();
+});
+
+console.log('TacticalCraft v2 — generating world...');
+generateWorld();
+buildAllMeshes();
+console.log(`World built: ${Object.keys(worldData).length} blocks, ${Object.keys(blockMeshes).length} meshes`);
+loop();
+</script>
+</body>
+</html>

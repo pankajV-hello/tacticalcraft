@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TacticalCraft — Prototype v0.1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a12;overflow:hidden;font-family:'Rajdhani',monospace}
+canvas{display:block}
+#hud{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
+#crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px}
+#crosshair::before,#crosshair::after{content:'';position:absolute;background:#00ff88;opacity:.85}
+#crosshair::before{width:2px;height:20px;left:9px;top:0}
+#crosshair::after{width:20px;height:2px;left:0;top:9px}
+#top-bar{position:absolute;top:0;left:0;right:0;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(0,0,0,.7) 0%,transparent 100%)}
+.logo{font-size:20px;font-weight:700;color:#8B7DD8;letter-spacing:.15em}
+.logo span{color:#00c97a}
+#stats{display:flex;gap:20px}
+.stat{text-align:center}
+.stat-val{font-size:18px;font-weight:700;color:#fff}
+.stat-lbl{font-size:9px;color:#888;letter-spacing:.1em;text-transform:uppercase}
+#health-bar{position:absolute;bottom:80px;left:20px;width:200px}
+.bar-label{font-size:10px;color:#888;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.bar-bg{height:6px;background:rgba(255,255,255,.1);border-radius:3px}
+.bar-fill{height:100%;border-radius:3px;transition:width .3s}
+#health-fill{background:#00c97a;width:100%}
+#block-bar{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.block-slot{width:48px;height:48px;border:1px solid rgba(255,255,255,.2);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,.4);transition:all .15s;flex-direction:column;gap:2px}
+.block-slot.active{border-color:#00c97a;background:rgba(0,201,122,.1)}
+.block-slot .block-color{width:24px;height:24px;border-radius:2px}
+.block-slot .slot-key{font-size:9px;color:#666}
+#mode-badge{position:absolute;top:60px;right:20px;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.mode-build{background:rgba(139,125,216,.2);border:1px solid #8B7DD8;color:#8B7DD8}
+.mode-combat{background:rgba(255,80,80,.15);border:1px solid #ff5050;color:#ff5050}
+#info-panel{position:absolute;bottom:80px;right:20px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:14px 18px;font-size:11px;color:#888;line-height:2}
+#info-panel b{color:#ccc}
+#start-screen{position:fixed;inset:0;background:#0a0a12;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+.start-logo{font-size:64px;font-weight:900;color:#8B7DD8;letter-spacing:.15em;margin-bottom:8px;text-shadow:0 0 60px rgba(139,125,216,.4)}
+.start-logo span{color:#00c97a}
+.start-tag{font-size:16px;color:#555;letter-spacing:.3em;text-transform:uppercase;margin-bottom:60px}
+.start-btn{padding:16px 48px;background:rgba(139,125,216,.15);border:1px solid #8B7DD8;border-radius:4px;color:#8B7DD8;font-size:14px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.start-btn:hover{background:rgba(139,125,216,.25);transform:scale(1.03)}
+.controls-list{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:8px 40px;font-size:12px;color:#555}
+.controls-list b{color:#888}
+#notification{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);border:1px solid rgba(0,201,122,.4);border-radius:4px;padding:8px 20px;font-size:12px;color:#00c97a;letter-spacing:.08em;opacity:0;transition:opacity .3s;text-align:center}
+#block-pos{position:absolute;top:50%;left:20px;transform:translateY(-50%);font-size:10px;color:#555;line-height:1.8}
+</style>
+</head>
+<body>
+<div id="start-screen">
+  <div class="start-logo">TACTICAL<span>CRAFT</span></div>
+  <div class="start-tag">Build · Fortify · Destroy</div>
+  <button class="start-btn" id="start-btn">ENTER WORLD</button>
+  <div class="controls-list">
+    <div><b>WASD</b> Move</div><div><b>Mouse</b> Look</div>
+    <div><b>Space</b> Jump</div><div><b>Shift</b> Sprint</div>
+    <div><b>Left click</b> Break block</div><div><b>Right click</b> Place block</div>
+    <div><b>1–6</b> Select block</div><div><b>F</b> Toggle build/combat</div>
+    <div><b>Scroll</b> Cycle blocks</div><div><b>Esc</b> Pause</div>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="crosshair"></div>
+  <div id="top-bar">
+    <div class="logo">TACTICAL<span>CRAFT</span> <span style="font-size:11px;color:#555;font-weight:400">proto v0.1</span></div>
+    <div id="stats">
+      <div class="stat"><div class="stat-val" id="stat-blocks">0</div><div class="stat-lbl">Blocks Placed</div></div>
+      <div class="stat"><div class="stat-val" id="stat-broken">0</div><div class="stat-lbl">Blocks Broken</div></div>
+      <div class="stat"><div class="stat-val" id="stat-pos">0,0,0</div><div class="stat-lbl">Position</div></div>
+    </div>
+  </div>
+  <div id="mode-badge" class="mode-combat">⚔ Combat</div>
+  <div id="notification"></div>
+  <div id="health-bar">
+    <div class="bar-label">Health</div>
+    <div class="bar-bg"><div class="bar-fill" id="health-fill"></div></div>
+  </div>
+  <div id="block-bar">
+    <div class="block-slot active" data-block="0"><div class="block-color" style="background:#6ca36c"></div><div class="slot-key">1</div></div>
+    <div class="block-slot" data-block="1"><div class="block-color" style="background:#8b7355"></div><div class="slot-key">2</div></div>
+    <div class="block-slot" data-block="2"><div class="block-color" style="background:#7a7a7a"></div><div class="slot-key">3</div></div>
+    <div class="block-slot" data-block="3"><div class="block-color" style="background:#c8b068"></div><div class="slot-key">4</div></div>
+    <div class="block-slot" data-block="4"><div class="block-color" style="background:#b07840"></div><div class="slot-key">5</div></div>
+    <div class="block-slot" data-block="5"><div class="block-color" style="background:#5a8ca0"></div><div class="slot-key">6</div></div>
+  </div>
+  <div id="info-panel">
+    <div><b>F</b> toggle build / combat mode</div>
+    <div><b>Right click</b> to place block</div>
+    <div><b>Left click</b> to break block</div>
+    <div id="block-name" style="color:#00c97a;margin-top:4px">Grass</div>
+  </div>
+  <div id="block-pos"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const CHUNK = 16, WORLD_H = 32, SEA = 12, REACH = 8;
+const BLOCK_COLORS = [
+  { name:"Grass",  top:0x5a9e4a, side:0x7a6040, bot:0x7a6040 },
+  { name:"Dirt",   top:0x8b6540, side:0x8b6540, bot:0x8b6540 },
+  { name:"Stone",  top:0x7a7a7a, side:0x7a7a7a, bot:0x7a7a7a },
+  { name:"Sand",   top:0xd4b870, side:0xd4b870, bot:0xd4b870 },
+  { name:"Wood",   top:0x6b4c2a, side:0x8b6530, bot:0x6b4c2a },
+  { name:"Water",  top:0x3070b0, side:0x3070b0, bot:0x3070b0 },
+  { name:"Metal",  top:0x607080, side:0x607080, bot:0x607080 },
+  { name:"Brick",  top:0xa05040, side:0xa05040, bot:0xa05040 },
+];
+const AIR = 0;
+let selectedBlock = 1; // 1=grass in our map
+let buildMode = false;
+let blocksPlaced = 0, blocksBroken = 0;
+
+// ── THREE.JS SETUP ────────────────────────────────────────────────────────
+const scene    = new THREE.Scene();
+scene.background = new THREE.Color(0x7ab8e8);
+scene.fog       = new THREE.Fog(0x7ab8e8, 40, 120);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 200);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+// Lighting
+const sun = new THREE.DirectionalLight(0xfff0d0, 1.2);
+sun.position.set(50, 80, 30);
+sun.castShadow = true;
+scene.add(sun);
+scene.add(new THREE.AmbientLight(0x6080b0, 0.6));
+
+// ── WORLD DATA ────────────────────────────────────────────────────────────
+const worldData = {}; // "x,y,z" -> blockId
+
+function noise(x, z) {
+  // Simple hash-based height noise
+  let n = Math.sin(x * 0.13 + z * 0.07) * 3
+         + Math.sin(x * 0.05 - z * 0.11) * 5
+         + Math.sin(x * 0.023 + z * 0.031) * 8;
+  return Math.round(SEA + n);
+}
+
+function generateWorld() {
+  const R = 24;
+  for (let x = -R; x < R; x++) {
+    for (let z = -R; z < R; z++) {
+      const h = noise(x, z);
+      for (let y = 0; y <= h; y++) {
+        let id;
+        if (y === h)            id = 1; // grass
+        else if (y > h - 4)     id = 2; // dirt
+        else                    id = 3; // stone
+        worldData[`${x},${y},${z}`] = id;
+      }
+      // Bedrock
+      worldData[`${x},0,${z}`] = 3;
+    }
+  }
+}
+
+// ── MESH BUILDING ─────────────────────────────────────────────────────────
+const blockMeshes = {};
+const materials = {};
+
+function getMat(color) {
+  if (!materials[color]) materials[color] = new THREE.MeshLambertMaterial({ color });
+  return materials[color];
+}
+
+function isAir(x, y, z) {
+  return !worldData[`${x},${y},${z}`];
+}
+
+function addBlock(x, y, z, id) {
+  const key = `${x},${y},${z}`;
+  if (blockMeshes[key]) return;
+  const color = BLOCK_COLORS[Math.min(id-1, BLOCK_COLORS.length-1)].top;
+  const geo   = new THREE.BoxGeometry(1, 1, 1);
+  const mesh  = new THREE.Mesh(geo, getMat(color));
+  mesh.position.set(x + .5, y + .5, z + .5);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData = { x, y, z, id };
+  scene.add(mesh);
+  blockMeshes[key] = mesh;
+}
+
+function removeBlock(x, y, z) {
+  const key = `${x},${y},${z}`;
+  if (blockMeshes[key]) { scene.remove(blockMeshes[key]); delete blockMeshes[key]; }
+  delete worldData[key];
+}
+
+function buildMeshes() {
+  Object.keys(worldData).forEach(k => {
+    const [x, y, z] = k.split(',').map(Number);
+    addBlock(x, y, z, worldData[k]);
+  });
+}
+
+// ── PLAYER ────────────────────────────────────────────────────────────────
+const player = {
+  pos: new THREE.Vector3(0, SEA + 3, 0),
+  vel: new THREE.Vector3(),
+  onGround: false, yaw: 0, pitch: 0, sprint: false,
+};
+camera.position.copy(player.pos);
+
+// ── INPUT ─────────────────────────────────────────────────────────────────
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'KeyF') toggleMode();
+  if (e.code === 'Digit1') selectBlock(0);
+  if (e.code === 'Digit2') selectBlock(1);
+  if (e.code === 'Digit3') selectBlock(2);
+  if (e.code === 'Digit4') selectBlock(3);
+  if (e.code === 'Digit5') selectBlock(4);
+  if (e.code === 'Digit6') selectBlock(5);
+  if (e.code === 'Escape') document.exitPointerLock && document.exitPointerLock();
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+let locked = false;
+document.addEventListener('pointerlockchange', () => { locked = !!document.pointerLockElement; });
+document.addEventListener('mousemove', e => {
+  if (!locked) return;
+  player.yaw   -= e.movementX * 0.002;
+  player.pitch  = Math.max(-1.4, Math.min(1.4, player.pitch - e.movementY * 0.002));
+});
+
+// Raycast helpers
+const raycaster = new THREE.Raycaster();
+
+document.addEventListener('mousedown', e => {
+  if (!locked) return;
+  const hit = raycast();
+  if (!hit) return;
+  if (e.button === 0) breakBlock(hit);
+  if (e.button === 2 && buildMode) placeBlock(hit);
+});
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('wheel', e => {
+  let s = selectedBlock + (e.deltaY > 0 ? 1 : -1);
+  s = ((s % 6) + 6) % 6;
+  selectBlock(s);
+});
+
+function raycast() {
+  raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+  const meshes = Object.values(blockMeshes);
+  const hits = raycaster.intersectObjects(meshes);
+  if (hits.length === 0) return null;
+  return hits[0];
+}
+
+function breakBlock(hit) {
+  const { x, y, z } = hit.object.userData;
+  if (y === 0) return; // bedrock
+  removeBlock(x, y, z);
+  blocksBroken++;
+  document.getElementById('stat-broken').textContent = blocksBroken;
+  notify('Block removed');
+}
+
+function placeBlock(hit) {
+  const n = hit.face.normal;
+  const { x, y, z } = hit.object.userData;
+  const nx = x + Math.round(n.x), ny = y + Math.round(n.y), nz = z + Math.round(n.z);
+  // Don't place inside player
+  const pp = player.pos;
+  if (Math.abs(nx - Math.floor(pp.x)) < 1 && ny >= Math.floor(pp.y) - 1 && ny <= Math.floor(pp.y) + 1 && Math.abs(nz - Math.floor(pp.z)) < 1) return;
+  const id = selectedBlock + 1;
+  worldData[`${nx},${ny},${nz}`] = id;
+  addBlock(nx, ny, nz, id);
+  blocksPlaced++;
+  document.getElementById('stat-blocks').textContent = blocksPlaced;
+  notify(`${BLOCK_COLORS[selectedBlock].name} placed`);
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────────────
+let notifyTimer;
+function notify(msg) {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(notifyTimer);
+  notifyTimer = setTimeout(() => el.style.opacity = '0', 1500);
+}
+
+function selectBlock(i) {
+  selectedBlock = i;
+  document.querySelectorAll('.block-slot').forEach((el, idx) => el.classList.toggle('active', idx === i));
+  document.getElementById('block-name').textContent = BLOCK_COLORS[i].name;
+}
+
+function toggleMode() {
+  buildMode = !buildMode;
+  const badge = document.getElementById('mode-badge');
+  badge.className = 'mode-badge ' + (buildMode ? 'mode-build' : 'mode-combat');
+  badge.textContent = buildMode ? '🔨 Build' : '⚔ Combat';
+  notify(buildMode ? 'Build mode — right click to place' : 'Combat mode');
+}
+
+// ── PHYSICS ───────────────────────────────────────────────────────────────
+const GRAVITY = -18, JUMP = 7, WALK = 5, SPRINT = 9;
+
+function getGroundY(x, z) {
+  for (let y = WORLD_H; y >= 0; y--) {
+    if (worldData[`${Math.floor(x)},${y},${Math.floor(z)}`]) return y + 1;
+  }
+  return 0;
+}
+
+function updatePlayer(dt) {
+  player.sprint = keys['ShiftLeft'];
+  const speed = player.sprint ? SPRINT : WALK;
+  const dir = new THREE.Vector3(
+    (keys['KeyD']?1:0) - (keys['KeyA']?1:0),
+    0,
+    (keys['KeyS']?1:0) - (keys['KeyW']?1:0)
+  ).normalize().multiplyScalar(speed);
+
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, player.yaw, 0));
+  dir.applyQuaternion(q);
+  player.vel.x = dir.x;
+  player.vel.z = dir.z;
+
+  const groundY = getGroundY(player.pos.x, player.pos.z);
+  player.onGround = player.pos.y <= groundY + 0.1;
+  if (player.onGround) {
+    player.pos.y = groundY;
+    player.vel.y = keys['Space'] ? JUMP : 0;
+  } else {
+    player.vel.y += GRAVITY * dt;
+  }
+
+  player.pos.addScaledVector(player.vel, dt);
+  if (player.pos.y < -10) { player.pos.set(0, SEA + 5, 0); player.vel.set(0,0,0); }
+
+  // Update camera
+  camera.position.copy(player.pos).add(new THREE.Vector3(0, 1.6, 0));
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+
+  // Update HUD
+  const p = player.pos;
+  document.getElementById('stat-pos').textContent =
+    `${Math.floor(p.x)},${Math.floor(p.y)},${Math.floor(p.z)}`;
+}
+
+// ── BLOCK HIGHLIGHT ───────────────────────────────────────────────────────
+const hlGeo  = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+const hlMat  = new THREE.MeshBasicMaterial({ color: 0x00ff88, wireframe: true, transparent: true, opacity: 0.5 });
+const hlMesh = new THREE.Mesh(hlGeo, hlMat);
+hlMesh.visible = false;
+scene.add(hlMesh);
+
+function updateHighlight() {
+  const hit = raycast();
+  if (hit) {
+    const { x, y, z } = hit.object.userData;
+    hlMesh.position.set(x + .5, y + .5, z + .5);
+    hlMesh.visible = true;
+    document.getElementById('block-pos').textContent =
+      `Targeting: ${x}, ${y}, ${z}\nBlock: ${BLOCK_COLORS[(hit.object.userData.id||1)-1]?.name||'?'}`;
+  } else {
+    hlMesh.visible = false;
+    document.getElementById('block-pos').textContent = '';
+  }
+}
+
+// ── LOOP ──────────────────────────────────────────────────────────────────
+let last = performance.now();
+function loop() {
+  requestAnimationFrame(loop);
+  const now = performance.now();
+  const dt  = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (locked) { updatePlayer(dt); updateHighlight(); }
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('start-screen').style.display = 'none';
+  renderer.domElement.requestPointerLock();
+});
+renderer.domElement.addEventListener('click', () => {
+  if (!locked) renderer.domElement.requestPointerLock();
+});
+
+generateWorld();
+buildMeshes();
+loop();
+</script>
+</body>
+</html>
