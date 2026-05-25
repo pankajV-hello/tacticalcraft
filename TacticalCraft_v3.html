@@ -231,6 +231,15 @@ canvas{display:block}
 </head>
 <body>
 
+<!-- LOADER -->
+<div id="loader" style="position:fixed;inset:0;z-index:999;background:#0D0D1E;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;letter-spacing:.2em;color:#F5F4EF">TACTICAL<span style="color:#00C97A">CRAFT</span></div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;color:#3a3a5a" id="load-msg">GENERATING WORLD...</div>
+  <div style="width:220px;height:3px;background:rgba(255,255,255,.06);border-radius:2px">
+    <div id="load-bar" style="height:100%;width:0%;background:#00C97A;border-radius:2px;transition:width .15s"></div>
+  </div>
+</div>
+
 <!-- CINEMATIC -->
 <canvas id="cin"></canvas>
 <button id="skip">SKIP INTRO ▶</button>
@@ -1422,11 +1431,44 @@ renderer.domElement.addEventListener('click',()=>{
   if(phase==='game'&&!locked) renderer.domElement.requestPointerLock();
 });
 
-console.log('TacticalCraft v3 — generating world...');
-generateWorld();
-buildAllMeshes();
-console.log(`World ready: ${Object.keys(worldData).length} blocks, ${Object.keys(blockMeshes).length} meshes`);
-loop();
+function setLoadProgress(pct, msg) {
+  document.getElementById('load-bar').style.width = pct + '%';
+  if (msg) document.getElementById('load-msg').textContent = msg;
+}
+
+function buildMeshesChunked(onDone) {
+  const entries = Object.entries(worldData);
+  const total = entries.length;
+  let i = 0;
+  const CHUNK = 800;
+  function step() {
+    const end = Math.min(i + CHUNK, total);
+    for (; i < end; i++) {
+      const [k, id] = entries[i];
+      const [x, y, z] = k.split(',').map(Number);
+      addMesh(x, y, z, id);
+    }
+    setLoadProgress(Math.round((i / total) * 70) + 20, `BUILDING WORLD... ${Math.round(i/total*100)}%`);
+    if (i < total) requestAnimationFrame(step);
+    else onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+setLoadProgress(5, 'GENERATING TERRAIN...');
+setTimeout(() => {
+  generateWorld();
+  setLoadProgress(20, 'PLACING STRUCTURES...');
+  setTimeout(() => {
+    buildMeshesChunked(() => {
+      setLoadProgress(100, 'FRAGMENT ZERO READY');
+      setTimeout(() => {
+        document.getElementById('loader').style.display = 'none';
+        loop();
+      }, 400);
+    });
+  }, 50);
+}, 50);
 </script>
 </body>
 </html>
