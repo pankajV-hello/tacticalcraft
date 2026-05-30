@@ -3,7 +3,7 @@
   // `wrangler deploy` finds this Workers config (name + assets), so it
   // skips the Pages workspace-detection path that was failing.
   // Serves the Vite build output in dist/ as a static site / SPA.
-  "name": "tacticalcraft",
+  "name": "tacticalcraft-web",
   "compatibility_date": "2024-11-01",
   "assets": {
     "directory": "./dist",
