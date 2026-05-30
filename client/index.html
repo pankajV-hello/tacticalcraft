@@ -112,6 +112,11 @@
   </div>
   <div id="cbadge"><span class="cb-ico" id="cb-ico">⚒</span><span class="cb-name" id="cb-name">Builder</span><div class="cb-bar" id="cb-bar" style="background:#00C97A"></div></div>
   <div id="mbadge" class="mb-combat">⚔ COMBAT</div>
+  <div id="levelbar">
+    <div class="lvl-row"><span id="level-badge">LEVEL 1</span><span id="level-name">PERIMETER PROBE</span></div>
+    <div class="lvl-track"><div id="level-fill"></div></div>
+    <div class="lvl-count" id="level-count">0 / 5</div>
+  </div>
   <div id="mmap"><canvas id="mmcv" width="108" height="108"></canvas><div class="mmap-lbl">MINIMAP</div></div>
   <div id="plist"><div class="pl-hdr" id="pl-hdr" style="display:none">Online</div><div id="pl-items"></div></div>
   <div id="notif"></div>
@@ -139,6 +144,32 @@
 </div>
 
 <div id="nameplates"></div>
+
+<!-- STORY CHAPTER -->
+<div id="story">
+  <div class="story-card">
+    <div class="story-chapter" id="story-chapter">CHAPTER I</div>
+    <div class="story-title" id="story-title">ARRIVAL</div>
+    <div class="story-body" id="story-body"></div>
+    <div class="story-skip">click to continue ▶</div>
+  </div>
+</div>
+
+<!-- VICTORY -->
+<div id="victory">
+  <div class="vic-card">
+    <div class="vic-kicker">FRAGMENT ZERO — HELD</div>
+    <div class="vic-title">VICTORY</div>
+    <div class="vic-sub">Operative <strong id="vic-name">WANDERER</strong> cleared all <strong id="vic-level">5</strong> threat levels.</div>
+    <div class="vic-story" id="vic-story"></div>
+    <div class="vic-stats">
+      <div class="vic-stat"><div class="vic-num" id="vic-kills">0</div><div class="vic-lbl">Crawlers Destroyed</div></div>
+      <div class="vic-stat"><div class="vic-num" id="vic-level2">5</div><div class="vic-lbl">Levels Cleared</div></div>
+    </div>
+    <div class="vic-phase2" id="vic-phase2">Levels 6–15 — “The Deep Fragment” — coming in Phase 2.</div>
+    <button class="vic-btn" id="vic-replay">▶ PLAY AGAIN</button>
+  </div>
+</div>
 
 <script type="module" src="/src/main.js"></script>
 </body>

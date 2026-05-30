@@ -143,3 +143,41 @@ canvas { display: block; }
 .nameplate { position: absolute; transform: translateX(-50%); font-family: var(--fd); font-weight: 700; font-size: 13px; letter-spacing: .08em; color: rgba(245,244,239,.9); text-shadow: 0 0 8px rgba(0,0,0,.9),0 1px 2px rgba(0,0,0,1); background: rgba(13,13,30,.6); padding: 2px 10px; border-radius: 3px; border: 1px solid rgba(255,255,255,.08); white-space: nowrap; display: none; }
 #btgt  { position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%); font-family: var(--fm); font-size: 9px; color: #202040; text-align: center; letter-spacing: .05em; }
 #dmg-flash { position: fixed; inset: 0; background: rgba(192,64,32,0); pointer-events: none; z-index: 25; transition: background .1s; }
+
+/* ── Level bar ──────────────────────────────────────────────────────────── */
+#levelbar { position: absolute; top: 96px; right: 20px; width: 200px; background: rgba(13,13,30,.78); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 9px 13px; }
+.lvl-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+#level-badge { font-family: var(--fd); font-weight: 900; font-size: 13px; letter-spacing: .12em; color: var(--amber); }
+#level-name  { font-family: var(--fd); font-weight: 700; font-size: 10px; letter-spacing: .14em; color: #8888a0; text-transform: uppercase; }
+.lvl-track { height: 5px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; }
+#level-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--amber), var(--teal-lt)); border-radius: 2px; transition: width .35s; }
+.lvl-count { font-family: var(--fm); font-size: 9px; color: #4a4a70; text-align: right; margin-top: 3px; }
+
+/* ── Victory screen ─────────────────────────────────────────────────────── */
+#victory { position: fixed; inset: 0; z-index: 400; display: none; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(15,110,86,.18) 0%, rgba(13,13,30,.97) 70%); opacity: 0; transition: opacity .4s; pointer-events: all; }
+#victory.show { opacity: 1; }
+.vic-card { text-align: center; max-width: 480px; padding: 48px 40px; background: rgba(13,13,30,.9); border: 1px solid rgba(0,201,122,.25); border-radius: 14px; box-shadow: 0 0 60px rgba(0,201,122,.12); transform: translateY(16px); transition: transform .4s cubic-bezier(.34,1.56,.64,1); }
+#victory.show .vic-card { transform: translateY(0); }
+.vic-kicker { font-family: var(--fd); font-weight: 700; font-size: 12px; letter-spacing: .4em; color: var(--teal-lt); text-transform: uppercase; margin-bottom: 10px; }
+.vic-title { font-family: var(--fd); font-weight: 900; font-size: 72px; letter-spacing: .08em; line-height: 1; color: var(--bone); margin-bottom: 14px; text-shadow: 0 0 40px rgba(0,201,122,.3); }
+.vic-sub { font-size: 15px; color: #b8b8d0; margin-bottom: 28px; }
+.vic-sub strong { color: var(--teal-lt); }
+.vic-stats { display: flex; gap: 20px; justify-content: center; margin-bottom: 26px; }
+.vic-stat { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 18px 28px; }
+.vic-num { font-family: var(--fm); font-size: 32px; font-weight: 600; color: var(--bone); }
+.vic-lbl { font-family: var(--fd); font-weight: 700; font-size: 10px; letter-spacing: .15em; color: #6a6a8a; text-transform: uppercase; margin-top: 4px; }
+.vic-phase2 { font-size: 13px; color: var(--amber); background: rgba(232,137,10,.07); border: 1px solid rgba(232,137,10,.2); border-radius: 8px; padding: 12px 18px; margin-bottom: 26px; }
+.vic-phase2 a { color: var(--teal-lt); }
+.vic-btn { font-family: var(--fd); font-weight: 900; font-size: 16px; letter-spacing: .2em; background: var(--purple); border: 1px solid var(--purple-lt); color: var(--bone); padding: 14px 40px; border-radius: 4px; cursor: pointer; transition: all .2s; }
+.vic-btn:hover { background: var(--purple-lt); box-shadow: 0 0 28px rgba(90,80,192,.4); }
+.vic-story { font-size: 13.5px; line-height: 1.7; color: #a8a8c4; font-style: italic; margin-bottom: 24px; padding: 0 6px; }
+
+/* ── Story chapter overlay ──────────────────────────────────────────────── */
+#story { position: fixed; inset: 0; z-index: 350; display: none; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(13,13,30,.0) 0%, rgba(13,13,30,.82) 45%, rgba(13,13,30,.82) 55%, rgba(13,13,30,.0) 100%); opacity: 0; transition: opacity .45s; pointer-events: all; cursor: pointer; }
+#story.show { opacity: 1; }
+.story-card { max-width: 600px; text-align: center; padding: 0 40px; transform: translateY(14px); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+#story.show .story-card { transform: translateY(0); }
+.story-chapter { font-family: var(--fm); font-size: 12px; letter-spacing: .5em; color: var(--amber); margin-bottom: 12px; }
+.story-title { font-family: var(--fd); font-weight: 900; font-size: 52px; letter-spacing: .1em; line-height: 1; color: var(--bone); margin-bottom: 20px; text-shadow: 0 0 30px rgba(60,52,137,.5); }
+.story-body { font-size: 16px; line-height: 1.8; color: #c4c4dc; margin-bottom: 24px; }
+.story-skip { font-family: var(--fm); font-size: 10px; letter-spacing: .2em; color: #4a4a70; text-transform: uppercase; }

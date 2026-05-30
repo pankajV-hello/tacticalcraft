@@ -19,6 +19,9 @@ import { drawMinimap } from './ui/minimap.js';
 import { addChatMsg, openChat, isChatOpen } from './ui/chat.js';
 import { setPreviewClass, tickPreview, checkServerStatus, getSelectedClass } from './ui/menu.js';
 import { updateCinematic, endCinematic, onCinematicDone } from './ui/cinematic.js';
+import { startLevels, recordKill, updateLevels, getLevel, getLevelKills, getQuota, getTotalKills } from './game/levels.js';
+import { updateLevelHUD, showVictory } from './ui/levelhud.js';
+import { showStoryBeat } from './ui/story.js';
 import { CLS_DATA } from './core/constants.js';
 
 // ── Phase state ────────────────────────────────────────────────────────────
@@ -85,7 +88,11 @@ document.addEventListener('mousedown', e => {
       const parent = hit.object.parent;
       if (parent?.userData?.type === 'crawler') {
         const killed = damageCrawler(hit.object);
-        if (killed) { /* update kills counter */ }
+        if (killed) {
+          recordKill();
+          updateHUD({ kills: getTotalKills() });
+          updateLevelHUD(getLevel(), getLevelKills(), getQuota());
+        }
         return;
       }
       doBreakBlock(hit);
@@ -124,6 +131,18 @@ function startGame(online) {
   setClass(cls);
   pickSlot(0);
   initBots();
+
+  // Start the threat-level progression (Phase 1: Levels 1–5)
+  startLevels({
+    onLevel: (lv) => {
+      updateLevelHUD(lv, 0, lv.quota);
+      showStoryBeat(lv.n);   // narrative chapter at each level transition
+    },
+    onVictory: (result) => {
+      document.exitPointerLock?.();
+      showVictory(result, playerName);
+    },
+  });
   spawnCrawlers();
   drawMinimap();
 
@@ -168,6 +187,7 @@ function loop() {
     updatePlayer(dt);
   }
   updateCrawlers(dt);
+  updateLevels(dt);
   updateBots(dt);
   updateParticles(dt);
   checkAIEvent(dt);

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Manual — TacticalCraft</title>
+<meta name="description" content="TacticalCraft player guide: classes, controls, threat levels, and how to clear Fragment Zero.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#3C3489;--purple-lt:#5A50C0;--teal:#0F6E56;--teal-lt:#00C97A;
+  --amber:#E8890A;--red:#c04020;--midnight:#1A1A2E;--midnight2:#0D0D1E;
+  --bone:#F5F4EF;--muted:#8888a0;
+  --fd:'Barlow Condensed',sans-serif;--fu:'Inter',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--midnight2);color:var(--bone);font-family:var(--fu);line-height:1.7;
+  background-image:radial-gradient(ellipse at 20% 0%,#1e1a3a 0%,transparent 55%),radial-gradient(ellipse at 90% 100%,#15241f 0%,transparent 50%);
+  background-attachment:fixed;}
+a{color:var(--teal-lt);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 120px}
+
+/* Header */
+header{padding:56px 0 28px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:48px}
+.logo{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.logo svg{filter:drop-shadow(0 0 18px rgba(60,52,137,.6))}
+.wm{font-family:var(--fd);font-weight:900;font-size:34px;letter-spacing:.1em;line-height:1}
+.wm em{color:var(--teal-lt);font-style:normal}
+.kicker{font-family:var(--fd);font-weight:700;font-size:13px;letter-spacing:.4em;color:var(--amber);text-transform:uppercase;margin-bottom:6px}
+.lead{font-size:17px;color:#b8b8d0;max-width:680px}
+.backlinks{margin-top:22px;display:flex;gap:18px;flex-wrap:wrap;font-family:var(--fm);font-size:12px}
+.backlinks a{color:var(--muted);border:1px solid rgba(255,255,255,.1);padding:6px 14px;border-radius:4px;transition:all .2s}
+.backlinks a:hover{color:var(--teal-lt);border-color:var(--teal-lt);text-decoration:none}
+
+/* Sections */
+section{margin-bottom:56px;scroll-margin-top:24px}
+h2{font-family:var(--fd);font-weight:900;font-size:28px;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+h2 .num{font-family:var(--fm);font-size:13px;color:var(--purple-lt);border:1px solid var(--purple-lt);border-radius:4px;padding:3px 9px;font-weight:600}
+h3{font-family:var(--fd);font-weight:700;font-size:19px;letter-spacing:.04em;margin:26px 0 10px;color:var(--teal-lt)}
+p{margin-bottom:14px;color:#c8c8dc}
+.section-sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+
+/* TOC */
+.toc{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:24px 28px;margin-bottom:48px}
+.toc h4{font-family:var(--fd);font-weight:700;font-size:12px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
+.toc ol{list-style:none;counter-reset:toc;display:grid;grid-template-columns:1fr 1fr;gap:8px 30px}
+.toc li{counter-increment:toc;font-size:14px}
+.toc li::before{content:counter(toc,decimal-leading-zero);font-family:var(--fm);font-size:11px;color:var(--purple-lt);margin-right:10px}
+
+/* Cards */
+.grid{display:grid;gap:14px}
+.grid.c2{grid-template-columns:1fr 1fr}
+.grid.c3{grid-template-columns:1fr 1fr 1fr}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px}
+.card.accent{border-color:rgba(0,201,122,.25);background:rgba(0,201,122,.04)}
+.card h3{margin-top:0}
+.card .ico{font-size:26px;margin-bottom:8px}
+.card .meta{font-family:var(--fm);font-size:11px;color:var(--muted);margin-bottom:10px}
+.tag{display:inline-block;font-family:var(--fm);font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:10px;margin:2px 4px 2px 0}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+th{font-family:var(--fd);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+td{color:#c8c8dc}
+tr:hover td{background:rgba(255,255,255,.02)}
+kbd{font-family:var(--fm);font-size:12px;background:#1a1a30;border:1px solid rgba(255,255,255,.15);border-bottom-width:2px;border-radius:4px;padding:2px 8px;color:var(--bone)}
+
+/* Level ladder */
+.ladder{display:flex;flex-direction:column;gap:2px;margin:20px 0}
+.rung{display:grid;grid-template-columns:64px 1fr;gap:16px;align-items:stretch;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-left-width:3px;border-radius:8px;padding:16px 20px}
+.rung .lvl{font-family:var(--fd);font-weight:900;font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center}
+.rung h3{margin:0 0 4px}
+.rung .desc{font-size:13px;color:#b0b0c8}
+.rung .clear{font-family:var(--fm);font-size:11px;color:var(--teal-lt);margin-top:8px}
+.rung.l1{border-left-color:#00C97A}.rung.l2{border-left-color:#5A50C0}
+.rung.l3{border-left-color:#E8890A}.rung.l4{border-left-color:#c04020}
+.rung.l5{border-left-color:#8B3020}.rung.l1 .lvl{color:#00C97A}
+.rung.l2 .lvl{color:#5A50C0}.rung.l3 .lvl{color:#E8890A}
+.rung.l4 .lvl{color:#c04020}.rung.l5 .lvl{color:#8B3020}
+
+.callout{border-left:3px solid var(--amber);background:rgba(232,137,10,.06);padding:14px 20px;border-radius:0 8px 8px 0;margin:18px 0;font-size:14px}
+.callout strong{color:var(--amber)}
+.tip{border-left:3px solid var(--teal-lt);background:rgba(0,201,122,.05);padding:14px 20px;border-radius:0 8px 8px 0;margin:18px 0;font-size:14px}
+.tip strong{color:var(--teal-lt)}
+
+footer{border-top:1px solid rgba(255,255,255,.08);padding-top:28px;color:var(--muted);font-size:13px;text-align:center}
+footer .fm{font-family:var(--fm)}
+@media(max-width:680px){.grid.c2,.grid.c3,.toc ol{grid-template-columns:1fr}.rung{grid-template-columns:48px 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">
+    <svg width="46" height="46" viewBox="0 0 64 64"><defs><linearGradient id="tf" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5A50C0"/><stop offset="100%" stop-color="#3C3489"/></linearGradient></defs><polygon points="10,22 32,35 32,58 10,45" fill="#1A1A2E"/><polygon points="54,22 32,35 32,58 54,45" fill="#2A2460"/><polygon points="32,8 54,22 32,35 10,22" fill="url(#tf)"/><line x1="32" y1="12" x2="32" y2="31" stroke="#0F6E56" stroke-width="2.5"/><line x1="14" y1="22" x2="50" y2="22" stroke="#0F6E56" stroke-width="2.5"/><circle cx="32" cy="22" r="3.5" fill="#00C97A"/></svg>
+    <div class="wm">TACTICAL<em>CRAFT</em></div>
+  </div>
+  <div class="kicker">Field Manual</div>
+  <p class="lead">Everything you need to drop into Fragment Zero, survive the Void, and rise through the threat levels. Build. Fortify. Destroy.</p>
+  <div class="backlinks">
+    <a href="/">▶ Play the game</a>
+    <a href="/architecture.html">⚙ Technical architecture</a>
+  </div>
+</header>
+
+<div class="toc">
+  <h4>Contents</h4>
+  <ol>
+    <li><a href="#story">The world &amp; your mission</a></li>
+    <li><a href="#start">Getting started</a></li>
+    <li><a href="#controls">Controls reference</a></li>
+    <li><a href="#classes">The six classes</a></li>
+    <li><a href="#factions">The three factions</a></li>
+    <li><a href="#levels">Threat levels &amp; how to clear them</a></li>
+    <li><a href="#building">Building &amp; fortifying</a></li>
+    <li><a href="#combat">Combat &amp; the Void Crawlers</a></li>
+    <li><a href="#multiplayer">Multiplayer</a></li>
+    <li><a href="#tips">Survival tips</a></li>
+  </ol>
+</div>
+
+<section id="story">
+  <h2><span class="num">01</span> The world &amp; your mission</h2>
+  <p class="section-sub">2157 CE — three decades after the Collapse.</p>
+  <p>A quantum collapse detonated without warning and shattered the megacity of <strong>NEXUM</strong> into 40,000 drifting fragments. From the wreckage rose three factions — the Architects, the Wardens, and the Ghosts — each chasing the same prize: <strong>Fragment Zero</strong>, the last intact shard, rumoured to hold the key to reversing the Collapse.</p>
+  <p>You arrive on Fragment Zero as the <strong>Void</strong> closes in. Hostile Void Crawlers surge from the dark perimeter in escalating waves. Your job is simple to say and hard to do: <strong>build defensible cover, hold your ground, and push back the Void through five rising threat levels.</strong></p>
+  <div class="callout"><strong>Core promise:</strong> TacticalCraft is the rare game where building and shooting live in the same minute. You will break terrain for materials, raise walls for cover, then turn and fight — over and over, faster each level.</div>
+
+  <h3>The story unfolds as you play</h3>
+  <p>Each threat level opens with a <strong>story chapter</strong> — the narrative is told <em>through</em> the fight, not just in the intro. Across five chapters you uncover what Fragment Zero really is, why the Void wants it, and what holding it means for the ruins of NEXUM.</p>
+  <div class="grid c2" style="margin-top:14px">
+    <div class="card"><div class="meta" style="color:#E8890A">CHAPTER I · Level 1</div><h3 style="margin-top:4px">Arrival</h3><p>You land on the last intact shard. The Void is already testing the edges.</p></div>
+    <div class="card"><div class="meta" style="color:#E8890A">CHAPTER II · Level 2</div><h3 style="margin-top:4px">The Signal</h3><p>Something beneath the fragment is calling the Crawlers. NEXUM was hiding something here.</p></div>
+    <div class="card"><div class="meta" style="color:#E8890A">CHAPTER III · Level 3</div><h3 style="margin-top:4px">Adaptation</h3><p>The enemy learns. A faction warns you: you're not defending rubble — you're defending the wound.</p></div>
+    <div class="card"><div class="meta" style="color:#E8890A">CHAPTER IV · Level 4</div><h3 style="margin-top:4px">The Truth</h3><p>Fragment Zero is the seed of the Collapse — and the key to reversing it. Everyone is converging.</p></div>
+    <div class="card" style="grid-column:1/-1"><div class="meta" style="color:#E8890A">CHAPTER V · Level 5</div><h3 style="margin-top:4px">Tremor</h3><p>The fragment fights back as reality frays. Hold the core through the final stand — and glimpse what waits below in <strong>The Deep Fragment</strong>.</p></div>
+  </div>
+</section>
+
+<section id="start">
+  <h2><span class="num">02</span> Getting started</h2>
+  <ol style="padding-left:20px;color:#c8c8dc">
+    <li style="margin-bottom:8px">Watch (or <kbd>Skip</kbd>) the cinematic intro.</li>
+    <li style="margin-bottom:8px">On the menu, <strong>choose your class</strong> — the 3D preview shows your operative. Each class changes how you play (see §4).</li>
+    <li style="margin-bottom:8px">Type a <strong>callsign</strong> (your name) in the field.</li>
+    <li style="margin-bottom:8px">Pick a mode:
+      <ul style="margin-top:6px">
+        <li><strong>⚡ Play Online</strong> — join the live server and fight alongside / against real players.</li>
+        <li><strong>🎮 Solo Mode</strong> — practice with 3 AI squadmates and the full Void Crawler threat.</li>
+      </ul>
+    </li>
+    <li style="margin-bottom:8px">Click to <strong>lock your mouse</strong> and take control. Press <kbd>Esc</kbd> any time to release it.</li>
+  </ol>
+  <div class="tip"><strong>New here?</strong> Start in Solo Mode as the <strong>Builder</strong>. It's the most forgiving way to learn the build-then-fight rhythm before going online.</div>
+</section>
+
+<section id="controls">
+  <h2><span class="num">03</span> Controls reference</h2>
+  <div class="grid c2">
+    <table>
+      <tr><th>Movement</th><th></th></tr>
+      <tr><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td><td>Move</td></tr>
+      <tr><td><kbd>Mouse</kbd></td><td>Look / aim</td></tr>
+      <tr><td><kbd>Shift</kbd></td><td>Sprint</td></tr>
+      <tr><td><kbd>Space</kbd></td><td>Jump</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Release mouse</td></tr>
+    </table>
+    <table>
+      <tr><th>Action</th><th></th></tr>
+      <tr><td><kbd>Left Click</kbd></td><td>Break block / Attack</td></tr>
+      <tr><td><kbd>Right Click</kbd></td><td>Place block (build mode)</td></tr>
+      <tr><td><kbd>F</kbd></td><td>Toggle Build / Combat mode</td></tr>
+      <tr><td><kbd>1</kbd>–<kbd>8</kbd></td><td>Select block type</td></tr>
+      <tr><td><kbd>Scroll</kbd></td><td>Cycle block type</td></tr>
+      <tr><td><kbd>T</kbd></td><td>Open chat</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="classes">
+  <h2><span class="num">04</span> The six classes</h2>
+  <p class="section-sub">Your class sets your health, reach, speed, and special ability. Pick to match your playstyle.</p>
+  <div class="grid c3">
+    <div class="card"><div class="ico">⚒</div><h3>Builder</h3><div class="meta">100 HP · Architects</div><p>2× block placement speed and extended reach. The fastest fortifier — raise walls before the wave hits.</p></div>
+    <div class="card"><div class="ico">⚔</div><h3>Soldier</h3><div class="meta">125 HP · Wardens</div><p>+25 max HP and a sprint boost. The front-line bruiser who soaks hits and closes distance fast.</p></div>
+    <div class="card"><div class="ico">⚙</div><h3>Engineer</h3><div class="meta">100 HP · Architects</div><p>Repairs blocks mid-combat and builds complex structures faster. Keeps your fort standing under fire.</p></div>
+    <div class="card"><div class="ico">✚</div><h3>Medic</h3><div class="meta">100 HP · Wardens</div><p>Passive health regeneration and (online) the ability to revive teammates. Outlasts everyone.</p></div>
+    <div class="card"><div class="ico">⊕</div><h3>Sniper</h3><div class="meta">80 HP · Ghosts</div><p>+6 block reach (14 total) and extended detection. Fragile but deadly from elevation and distance.</p></div>
+    <div class="card"><div class="ico">💥</div><h3>Demolisher</h3><div class="meta">100 HP · Ghosts</div><p>Breaks a 3×3 area at once and reshapes the battlefield in seconds. Mass terrain control.</p></div>
+  </div>
+</section>
+
+<section id="factions">
+  <h2><span class="num">05</span> The three factions</h2>
+  <p class="section-sub">Your class belongs to a faction. Factions shape lore, colour, and (online) territory rivalry.</p>
+  <div class="grid c3">
+    <div class="card" style="border-color:rgba(15,110,86,.35)"><h3 style="color:#0F6E56">The Architects</h3><div class="meta">Builder · Engineer</div><p>Believe the city can be rebuilt, block by block. First to fortify, last to fall.</p></div>
+    <div class="card" style="border-color:rgba(60,52,137,.4)"><h3 style="color:#5A50C0">The Wardens</h3><div class="meta">Soldier · Medic</div><p>Hold the remaining fragments by force. They stand between the Crawlers and what remains.</p></div>
+    <div class="card" style="border-color:rgba(139,48,32,.4)"><h3 style="color:#c04020">The Ghosts</h3><div class="meta">Sniper · Demolisher</div><p>Move unseen, trade information for survival, and reshape the field before anyone sees them coming.</p></div>
+  </div>
+</section>
+
+<section id="levels">
+  <h2><span class="num">06</span> Threat levels &amp; how to clear them</h2>
+  <p class="section-sub">Fragment Zero escalates through five threat levels. Each level raises Void Crawler count, speed, and aggression. Clear a level by surviving its wave window and reaching the kill quota — then the next level begins automatically.</p>
+
+  <div class="ladder">
+    <div class="rung l1">
+      <div class="lvl">1</div>
+      <div>
+        <h3>Perimeter Probe</h3>
+        <div class="desc">A handful of Void Crawlers test your defences. Slow, few, predictable. This is your setup window.</div>
+        <div class="clear">CLEAR: Survive 90s &amp; destroy 5 Crawlers → fortify a basic wall while you fight.</div>
+      </div>
+    </div>
+    <div class="rung l2">
+      <div class="lvl">2</div>
+      <div>
+        <h3>Void Surge</h3>
+        <div class="desc">Crawlers arrive in tighter groups and move faster. Gaps in your cover start to cost you.</div>
+        <div class="clear">CLEAR: Destroy 12 Crawlers → seal your fort to a single defensible entrance.</div>
+      </div>
+    </div>
+    <div class="rung l3">
+      <div class="lvl">3</div>
+      <div>
+        <h3>Crawler Mutation</h3>
+        <div class="desc">Mutated Crawlers hit harder and swarm from two directions. An AI World Event fires — watch the banner.</div>
+        <div class="clear">CLEAR: Destroy 20 Crawlers &amp; keep your core structure standing → use elevation.</div>
+      </div>
+    </div>
+    <div class="rung l4">
+      <div>
+        <div class="lvl">4</div>
+      </div>
+      <div>
+        <h3>Void Storm</h3>
+        <div class="desc">Visibility drops and the surge is relentless. Repair under fire (Engineer shines). Mistakes compound fast.</div>
+        <div class="clear">CLEAR: Survive the storm window &amp; destroy 30 Crawlers → rely on chokepoints, not open ground.</div>
+      </div>
+    </div>
+    <div class="rung l5">
+      <div class="lvl">5</div>
+      <div>
+        <h3>Fragment Zero Tremor</h3>
+        <div class="desc">The fragment itself becomes unstable. Maximum Crawler density and speed. This is the proving ground.</div>
+        <div class="clear">CLEAR: Hold Fragment Zero to the end of the wave &amp; destroy 40 Crawlers → victory screen + score.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout"><strong>How progression works:</strong> Your kill count (top HUD) and the AI World Event banners track the threat level. When you meet a level's quota and survive its window, the next wave escalates automatically — there is no menu break, the pressure just rises. Falling to 0 HP returns you to the last safe spawn; your built structures persist.</div>
+  <div class="tip"><strong>Score &amp; moving on:</strong> Blocks Placed, Blocks Broken, and Kills are tracked live in the HUD. Clearing Level 5 is the current win condition; online, your placed-block and kill totals feed the live server leaderboard via <span class="fm">/api/status</span>.</div>
+</section>
+
+<section id="building">
+  <h2><span class="num">07</span> Building &amp; fortifying</h2>
+  <p>Press <kbd>F</kbd> to enter <strong>Build mode</strong> (the mode badge turns purple). Right-click places the selected block on the face you're aiming at; left-click breaks. Switch blocks with <kbd>1</kbd>–<kbd>8</kbd> or the scroll wheel.</p>
+  <h3>Block types</h3>
+  <p>
+    <span class="tag" style="background:#5a9e4a33;color:#7ec96a">Grass</span>
+    <span class="tag" style="background:#8b654033;color:#b8895f">Dirt</span>
+    <span class="tag" style="background:#7a7a7a33;color:#aaa">Stone</span>
+    <span class="tag" style="background:#d4b87033;color:#d4b870">Sand</span>
+    <span class="tag" style="background:#8b653033;color:#c89a5a">Wood</span>
+    <span class="tag" style="background:#60708033;color:#90a0b8">Metal</span>
+    <span class="tag" style="background:#c8a87033;color:#c8a870">Sandbag</span>
+    <span class="tag" style="background:#a0504033;color:#c87a6a">Brick</span>
+  </p>
+  <p><strong>Metal</strong> and <strong>Brick</strong> are your toughest cover. <strong>Sandbag</strong> is the Builder's free, instant wall. Stack two blocks high to break enemy line-of-sight and force Crawlers around a chokepoint.</p>
+  <div class="tip"><strong>The golden loop:</strong> Break terrain → collect the material → wall off everything but one entrance → stand inside and fight through the gap. Repeat, reinforcing each level.</div>
+</section>
+
+<section id="combat">
+  <h2><span class="num">08</span> Combat &amp; the Void Crawlers</h2>
+  <p>Press <kbd>F</kbd> to return to <strong>Combat mode</strong> (badge turns red). Left-click attacks down your crosshair within your class reach. Void Crawlers — dark cubes with glowing red eyes — move straight toward you and deal contact damage, so never let them stack on you.</p>
+  <p>Each Crawler takes <strong>3 hits</strong> to destroy. Destroyed Crawlers respawn from the perimeter after ~15 seconds, and the respawn rate climbs with the threat level. Your <strong>Kills</strong> counter (top HUD) is your progression meter.</p>
+  <div class="callout"><strong>Watch the red dots</strong> on the minimap (top-right). They are incoming Crawlers. If several converge from one side, reposition behind cover before they arrive.</div>
+</section>
+
+<section id="multiplayer">
+  <h2><span class="num">09</span> Multiplayer</h2>
+  <p>In <strong>Play Online</strong>, you share Fragment Zero with real players in real time. You'll see their nameplates, their builds appear in your world instantly, and the chat (<kbd>T</kbd>) is live. The online roster shows on the right of the HUD.</p>
+  <p>The world is shared: blocks you place or break sync to everyone, and the server keeps the recent world state so late-joiners see the current fort. Coordinate with your faction, divide build and defence duties, and push the threat levels together.</p>
+  <div class="tip"><strong>Connection note:</strong> The free server may sleep after inactivity and take ~30 seconds to wake on the first join. If "Server offline" shows, wait a moment and retry, or drop into Solo Mode.</div>
+</section>
+
+<section id="tips">
+  <h2><span class="num">10</span> Survival tips</h2>
+  <div class="grid c2">
+    <div class="card accent"><h3>Fortify first</h3><p>Use Level 1's calm to wall up. A finished chokepoint before Level 2 is worth more than any number of early kills.</p></div>
+    <div class="card accent"><h3>Hold high ground</h3><p>The watchtowers and stacked blocks give you sightlines. Snipers especially should fight from elevation.</p></div>
+    <div class="card accent"><h3>One entrance only</h3><p>Crawlers funnel. Seal every gap but one and you turn a swarm into a single-file line you can clear.</p></div>
+    <div class="card accent"><h3>Mind your back</h3><p>From Level 3 they flank. Glance at the minimap between kills — red dots behind you are how runs end.</p></div>
+    <div class="card accent"><h3>Repair, don't rebuild</h3><p>Engineers can patch damaged cover mid-fight. Keep the core standing rather than starting over.</p></div>
+    <div class="card accent"><h3>Play your class</h3><p>Soldier tanks the door, Builder/Engineer maintain walls, Sniper picks from range, Medic keeps everyone up. Online, split the roles.</p></div>
+  </div>
+</section>
+
+<footer>
+  <p class="fm">TacticalCraft Games Pty Ltd — Melbourne, VIC, Australia</p>
+  <p style="margin-top:6px">Build. Fortify. Destroy. &nbsp;·&nbsp; <a href="/">Return to game</a> &nbsp;·&nbsp; <a href="/architecture.html">Architecture</a></p>
+</footer>
+
+</div>
+</body>
+</html>
