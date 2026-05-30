@@ -1,6 +1,0 @@
-# Cloudflare Pages configuration for TacticalCraft
-# Declares this repo as a Pages project so `wrangler deploy` targets Pages
-# (not Workers) and ignores the npm workspace sub-packages.
-name = "tacticalcraft"
-pages_build_output_dir = "dist"
-compatibility_date = "2024-05-30"
