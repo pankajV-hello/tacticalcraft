@@ -1,0 +1,24 @@
+{
+  "name": "tacticalcraft-server",
+  "version": "4.0.0",
+  "description": "TacticalCraft multiplayer server — TacticalCraft Games Pty Ltd",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev":   "nodemon src/index.js"
+  },
+  "dependencies": {
+    "express":            "^4.18.2",
+    "express-rate-limit": "^7.3.1",
+    "helmet":             "^7.1.0",
+    "socket.io":          "^4.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Pankaj Verma — TacticalCraft Games Pty Ltd",
+  "license": "UNLICENSED"
+}

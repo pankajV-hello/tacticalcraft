@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TacticalCraft — Build. Fortify. Destroy.</title>
+<meta name="description" content="A post-collapse faction voxel warfare game. Build. Fortify. Destroy. — TacticalCraft Games Pty Ltd">
+<meta property="og:title" content="TacticalCraft — Build. Fortify. Destroy.">
+<meta property="og:description" content="Browser multiplayer voxel warfare. Three factions. One fragment remains.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">TACTICAL<span>CRAFT</span></div>
+  <div id="load-msg" class="loader-msg">GENERATING WORLD...</div>
+  <div class="loader-track"><div id="load-bar" class="loader-fill"></div></div>
+</div>
+
+<!-- CINEMATIC -->
+<canvas id="cin"></canvas>
+<button id="skip">SKIP INTRO ▶</button>
+
+<!-- MENU -->
+<div id="menu">
+  <div class="menu-logo">
+    <svg width="60" height="60" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="tf" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#5A50C0"/><stop offset="100%" stop-color="#3C3489"/>
+        </linearGradient>
+        <filter id="glo"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <polygon points="10,22 32,35 32,58 10,45" fill="#1A1A2E"/>
+      <polygon points="54,22 32,35 32,58 54,45" fill="#2A2460"/>
+      <polygon points="32,8 54,22 32,35 10,22" fill="url(#tf)"/>
+      <g filter="url(#glo)">
+        <line x1="32" y1="12" x2="32" y2="31" stroke="#0F6E56" stroke-width="2"/>
+        <line x1="14" y1="22" x2="50" y2="22" stroke="#0F6E56" stroke-width="2"/>
+        <circle cx="32" cy="22" r="3.5" fill="none" stroke="#00C97A" stroke-width="1.5"/>
+        <circle cx="32" cy="22" r="1.5" fill="#00C97A"/>
+      </g>
+    </svg>
+    <div class="wm">TACTICAL<em>CRAFT</em></div>
+  </div>
+  <div class="tagline">Build &nbsp;·&nbsp; Fortify &nbsp;·&nbsp; Destroy</div>
+
+  <div class="menu-body">
+    <div class="cls-wrap">
+      <div class="cls-lbl">Choose your class</div>
+      <div id="cls-grid">
+        <div class="cc sel" data-cls="0"><span class="cc-ico">⚒</span><span class="cc-name">Builder</span><span class="cc-hp">100 HP</span><span class="cc-desc">2× build speed</span></div>
+        <div class="cc"     data-cls="1"><span class="cc-ico">⚔</span><span class="cc-name">Soldier</span><span class="cc-hp">125 HP</span><span class="cc-desc">+25 HP · sprint boost</span></div>
+        <div class="cc"     data-cls="2"><span class="cc-ico">⚙</span><span class="cc-name">Engineer</span><span class="cc-hp">100 HP</span><span class="cc-desc">Block repair mode</span></div>
+        <div class="cc"     data-cls="3"><span class="cc-ico">✚</span><span class="cc-name">Medic</span><span class="cc-hp">100 HP</span><span class="cc-desc">Passive HP regen</span></div>
+        <div class="cc"     data-cls="4"><span class="cc-ico">⊕</span><span class="cc-name">Sniper</span><span class="cc-hp">80 HP</span><span class="cc-desc">+6 reach range</span></div>
+        <div class="cc"     data-cls="5"><span class="cc-ico">💥</span><span class="cc-name">Demolisher</span><span class="cc-hp">100 HP</span><span class="cc-desc">3×3 area break</span></div>
+      </div>
+      <div id="cls-detail">
+        <div class="cd-name" id="cd-name" style="color:#00C97A">Builder</div>
+        <div class="cd-faction" id="cd-faction" style="color:#0F6E56">The Architects</div>
+        <div class="cd-desc" id="cd-desc">"Every block placed is a promise kept."<br>Masters of rapid construction. First to fortify, last to fall.</div>
+        <div class="cd-bonus" id="cd-bonus"><span>⚡ 2× block placement speed</span><br><span>🔨 Extended build reach</span><br><span>🏗 Bonus: Sandbag walls cost 0 delay</span></div>
+      </div>
+    </div>
+    <div id="preview-wrap">
+      <div class="preview-lbl">3D PREVIEW</div>
+    </div>
+  </div>
+
+  <div class="input-row">
+    <input class="tc-input" id="name-in" type="text" placeholder="Enter your name..." maxlength="20" autocomplete="off" spellcheck="false">
+    <input class="tc-input srv" id="srv-in" type="text" value="https://tacticalcraft.onrender.com" spellcheck="false">
+  </div>
+  <div class="btn-row">
+    <button class="btn-play btn-online" id="btn-online">⚡ PLAY ONLINE</button>
+    <button class="btn-play btn-solo"   id="btn-solo">🎮 SOLO MODE</button>
+  </div>
+  <div id="srv-status" class="sts-chk">Checking server...</div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="vig"></div>
+  <div id="dmg-flash"></div>
+  <div id="xhair">
+    <svg viewBox="0 0 28 28" fill="none">
+      <line x1="14" y1="2" x2="14" y2="9" stroke="#00C97A" stroke-width="1.5"/>
+      <line x1="14" y1="19" x2="14" y2="26" stroke="#00C97A" stroke-width="1.5"/>
+      <line x1="2" y1="14" x2="9" y2="14" stroke="#00C97A" stroke-width="1.5"/>
+      <line x1="19" y1="14" x2="26" y2="14" stroke="#00C97A" stroke-width="1.5"/>
+      <circle cx="14" cy="14" r="3" stroke="#00C97A" stroke-width="1" fill="none" opacity="0.6"/>
+    </svg>
+  </div>
+  <div id="tbar">
+    <div class="hwm">
+      <svg width="20" height="20" viewBox="0 0 64 64"><defs><linearGradient id="tf2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5A50C0"/><stop offset="100%" stop-color="#3C3489"/></linearGradient></defs><polygon points="10,22 32,35 32,58 10,45" fill="#1A1A2E"/><polygon points="54,22 32,35 32,58 54,45" fill="#2A2460"/><polygon points="32,8 54,22 32,35 10,22" fill="url(#tf2)"/><line x1="32" y1="12" x2="32" y2="31" stroke="#0F6E56" stroke-width="3"/><line x1="14" y1="22" x2="50" y2="22" stroke="#0F6E56" stroke-width="3"/><circle cx="32" cy="22" r="4" fill="#00C97A"/></svg>
+      TACTICAL<em>CRAFT</em>
+      <span class="online-badge" id="online-badge">SOLO</span>
+    </div>
+    <div class="hstats">
+      <div class="hs"><div class="hs-v" id="s-placed">0</div><div class="hs-l">Placed</div></div>
+      <div class="hs"><div class="hs-v" id="s-broken">0</div><div class="hs-l">Broken</div></div>
+      <div class="hs"><div class="hs-v" id="s-kills">0</div><div class="hs-l">Kills</div></div>
+      <div class="hs"><div class="hs-v" id="s-pos" style="font-size:11px">0,0,0</div><div class="hs-l">Position</div></div>
+    </div>
+  </div>
+  <div id="cbadge"><span class="cb-ico" id="cb-ico">⚒</span><span class="cb-name" id="cb-name">Builder</span><div class="cb-bar" id="cb-bar" style="background:#00C97A"></div></div>
+  <div id="mbadge" class="mb-combat">⚔ COMBAT</div>
+  <div id="mmap"><canvas id="mmcv" width="108" height="108"></canvas><div class="mmap-lbl">MINIMAP</div></div>
+  <div id="plist"><div class="pl-hdr" id="pl-hdr" style="display:none">Online</div><div id="pl-items"></div></div>
+  <div id="notif"></div>
+  <div id="ai-event"><div class="aie-hdr">⚡ AI WORLD EVENT</div><div class="aie-txt" id="aie-txt"></div></div>
+  <div id="sbars">
+    <div class="brow"><div class="bl"><span>HEALTH</span><span class="bv" id="hval">100</span></div><div class="bbg"><div class="bf" id="hfill"></div></div></div>
+    <div class="brow"><div class="bl"><span>ARMOR</span><span class="bv" id="aval">75</span></div><div class="bbg"><div class="bf" id="afill" style="width:75%"></div></div></div>
+  </div>
+  <div id="toolbar">
+    <div class="slot act" data-b="0"><div class="sc2" style="background:#5a9e4a"></div><div class="sk">1</div></div>
+    <div class="slot" data-b="1"><div class="sc2" style="background:#8b6540"></div><div class="sk">2</div></div>
+    <div class="slot" data-b="2"><div class="sc2" style="background:#7a7a7a"></div><div class="sk">3</div></div>
+    <div class="slot" data-b="3"><div class="sc2" style="background:#d4b870"></div><div class="sk">4</div></div>
+    <div class="slot" data-b="4"><div class="sc2" style="background:#8b6530"></div><div class="sk">5</div></div>
+    <div class="slot" data-b="5"><div class="sc2" style="background:#607080"></div><div class="sk">6</div></div>
+    <div class="slot" data-b="6"><div class="sc2" style="background:#c8a870"></div><div class="sk">7</div></div>
+    <div class="slot" data-b="7"><div class="sc2" style="background:#a05040"></div><div class="sk">8</div></div>
+  </div>
+  <div id="info"><div><b>F</b> toggle mode</div><div><b>R-click</b> place block</div><div><b>L-click</b> break / attack</div><div><b>T</b> chat</div><div id="bname">Grass</div></div>
+  <div id="chat-area">
+    <div id="chat-msgs"></div>
+    <div id="chat-in-row"><span class="chat-prompt">SAY:</span><input id="chat-in" type="text" maxlength="200" autocomplete="off" spellcheck="false"></div>
+  </div>
+  <div id="btgt"></div>
+</div>
+
+<div id="nameplates"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
